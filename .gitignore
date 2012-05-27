@@ -191,6 +191,7 @@ create-this-app
 *.map
 *.objdump
 sopc_builder_log.txt
+*_hw.tcl~
 
 #################################
 ## Ignore files in this project
