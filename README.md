@@ -1,81 +1,71 @@
 ﻿MZ-80C on FPGA
 =============
-Altera(Terasic)製FPGA学習ボード・DE0(CycloneIII・EP3C16)で動作する、シャープのレトロPCであるMZ-80K/Cシリーズの実装です。
 
-まだ未完成ではありますが、ある程度試してもらえるようになってきたので、こちらで公開することにします。
+What is this?
+-------------------
+This is a implementation Sharp MZ-80 series to FPGA.
 
-完成までの実装予定
+Requirements
+--------------------
+* Altera(Terasic) DE0 board
+* Quartus II (I use 11.0 sp1)
+
+How to reproduction project
+----------------------------------------
+1. Download zip file.
+* Create folder to build project in your PC.
+* Put these files in zip to folder.
+    * logic/
+    * internal\_sram\_hw.tcl
+    * internal\_sram2\_hw.tcl
+    * internal\_sram8\_hw.tcl
+    * mz80c.cdf
+    * mz80c.pin
+    * mz80c.qsf
+    * mz80c.sdc
+    * mz80c\_de0.qpf
+    * mz80c\_de0\_sopc.sopc
+* Start Quartus II.
+* Open project. File->Open Project...->mz80c_de0.qpf
+* Start SOPC Builder. Tools->SOPC Builder
+* Push Ganerate button in SOPC Builder.
+* When generate successfully, exit SOPC Builder.
+* Start Compilation at Quartus II.
+* Program to DE0 board with mz80c.pof.
+* Start NiosII EDS. Tools->Nios II Software Build Tools for Eclipse
+* When does PC ask workspace, push OK as it is.
+* Create new application and BSP. File->New->Nios II Application and BSP from Template
+* Set parameters and push Finish button.
+    * SOPC Information File name:->mz80c\_de0\_sopc.sopcinfo
+    * CPU name:->cpu\_0
+    * Project name:->mz80c\_de0\_soft
+    * Project template->Hello World
+* Put these files in zip(software/mz80c\_de0\_soft/*) to software/mz80c\_de0\_soft folder.
+    * diskio.c
+    * diskio.h
+    * ff.c
+    * ff.h
+    * ffconf.h
+    * file.c
+    * file.h
+    * integer.h
+    * key.c
+    * key.h
+    * menu.c
+    * menu.h
+    * mz80c\_de0\_main.c
+    * mz80c\_de0\_main.h
+    * mzctrl.c
+    * mzctrl.h
+* Delete hello\_world.c.
+* At Project Explorer, open mz80c\_de0\_soft, then right-click and select Refresh(F5).
+* Build project. Project->Build All
+* Program to DE0 board with mz80c\_de0\_soft.elf.
+
+Special thanks to ...
 -----------------------------
-* NiosIIのソースの冒頭コメントを自分用に書き換える
-    * EDSのデフォルトのコメントなので…。通勤時間を利用して書き換える予定なのでじっくりやります。
-* MZ-1200/80Aに準備されたカラー回路のビットをSA-1510から推定して修正する
-    * MZ-80AのモニタであるSA-1510のソースを見ると、アトリビュート領域を0xcfで初期化しています。MZ-700だと白地に緑の文字になってすごく見にくいので、多分違うと思うのですが…。
-* PCG実装(PCG-8000とPCG-1200をモードで切り替え)
-* ColorGal5を実装
-* MZ-1200にてH-BLANKとWaitの関係を観測
-    * MZ-1200の回路図を追っているだけではどうにもよくわからないので(PLAも使われてるし)、ロジアナで信号波形と併せて調べる方が良いと思います。
-* VRAMウェイト実装、ON/OFF切り替え
-    * VRAMアクセスウェイトはMZ-1200/80Aモードで有効になります。
-* MZ-80CのCOSMOS倍速ボードをもう一度解析
-    * 昔一度解析したのですが…あの時はメモリスワップの操作アドレスを導き出しただけだったので、この際回路図も描いてしまう予定です。
-* 倍速化(テープ動作時は自動解除)
-    * 実装しないかもしれません。
-* MZ-80A相当の拡張機能(メモリスワップ、画面反転、ハードウェアスクロール)
-    * ハードウェアスクロールのみMZ-80Aの機能です。以前1chipMSX版として作成していますので、当時のソースを見ればすぐ実装できるはずです。
-* プリンタ出力をシリアルに
-    * Spartan-3 Starter Kit版にて実装したことがあります。切替スイッチが余っていれば、コントロールコードのフィルタリング機能も設けるつもりです。
-* モニタをブロックRAMからSDRAMに移行しブロックRAMを解放
-    * これができたら、モニタのプログラムを埋め込む必要がなくなります。
-* NiosIIが起動時にFlashからSDRAMへモニタなどを転送する
-    * モニタの他、FD ROMやフォントデータも転送するようにします。
-    * モードスイッチを読み取り、適切なデータを転送するようにします。
-* NiosIIが起動時にSDカードから設定ファイルを読み込み、それに従いROMデータをカードから読み込んで転送する
-    * 一時的に違うデータを読み込ませたい時に使用する機能です。よくあるiniファイル形式を読み出すためのサブルーチンを作ったことがあるのでその転用をするつもりです。基本的にiniファイルがあれば設定済みデータより優先しますが、スイッチで無効化する機能も必要かと考えています。
-* ニデコカラーボード(サブプロセッサが支援)
-* キーマトリクスをソフト設定可能に
-    * MZ-80Aだけキーマトリクスが違うので、マップデータを流し込めばキー配列が代わるような仕組みがあると便利です。今後も活用できます。
-* ジョイスティック入力のキーボード模擬のソフト設定
-    * MZ-80K/K2/K2Eはキーそのものがマトリクス配置だったので、十字キーのコンビネーションは選び放題。プログラムによってまちまちだったはずなので、これがソフト設定で変更できれば最高なんですが。
-* EMM(2ページ)
-    * アイ・オー・データ機器のPIO-2034(256KB)を二つ分実装します。
-* MZTデータ無指定時、RDINFでファイルダイアログを出してファイル名入力、設定メニューを使わずにロードできるようにする
-    * モニタにパッチが必要ですが、例えばLOADコマンドを実行したらNiosIIの画面に切り替わり、ファイルを指定するとMZの画面に戻り、指定バイト数だけ指定アドレスにNiosIIから強制書き込みするような使い方ができれば、すごく便利になると思います。
-* フロッピーI/F(80K用と80A用)
-    * MZ-80K/C用FDDは2S仕様でしたが、MZ-80Aは2D仕様です。モード設定か何かで切り替えて使えるようにする予定です。
-* I/OボードにRTCを実装し、NiosIIからアクセスできるようにする
-    * SPIで時刻が読めるRTCを追加実装する予定です。NiosIIのメニューから時刻設定ができるようにならないといけませんね。
-
-これまでに実装したもの
----------------------------------
-* MZ-700実装を手本にしたMZ-80Cを実装
-    * たった4晩で動きました。これまでの蓄えがあったればこそですね。
-* I/Oボード作成
-* VRAMをシングルポートに変更、15kHzのタイミング回路を搭載
-    * 画面のノイズを再現するため、これまでDPRAMで構成していた表示回路を、シングルポートに変更しました。Z80がVRAMアクセス時は表示データにZ80の読み書きデータを流すようにしています。
-    * 信号タイミングは15kHzモニタで表示可能とする基準で設計しています。もしかしたら本物と違っているかもしれません。
-* スキャンコンバータでVGA化
-    * 以前作ったアップスキャンコンバータのロジック(Xilinx XC3S250E用)をほぼそのまま持ってきています。
-* RAMをブロックRAMからSDRAMに切り替え
-    * MZとNiosIIで共用させる必要があったので、Altera謹製では使えないため、書籍を参考に作り直しました。
-* 簡素なNiosII/eプロジェクトを作成し環境を確認する
-    * いわゆる"Hello, World"を出力させるまでを指します。
-* NiosII/eプロジェクトにSPIを追加しSDカードアクセスのテスト(初期化まで)
-    * SD/SDHC/MMCに対応させました。SPIはNiosIIのコンポーネントを使いましたが、専用ライブラリとの組み合わせでは受信時に'0'を送出してしまうので、若干工夫しています。
-* MZ-80Cの回路を1階層落としてモジュール化する
-    * 1chipMSX版時代にはサブプロセッサをMZ-700内のブロックとして定義していましたが、今回はCPUごとにシステムがあるようなイメージとするため、MZだけをまるごと1モジュールとする構成に変えました。
-* 自前のSDRAMコントローラをNiosIIに接続
-    * NiosIIからはSRAMとしてアクセスするようになっています。
-* NiosII/eプロジェクトのROM化を確認
-    * DE0付属SDカードデモを転用するのが楽…という話ではありますが、転用して使う情報はFlashメモリの特性定義なので、パラメータだけ書き写して使用したら特に苦労なくROM化できました。
-* MZ-1200/80Aに準備されたカラー回路を想定し実装
-    * カラー基板への信号から、おおよその仕組みはMZ-700と同等と想定。フォア/バックのビット位置や、カラーコードは不明ですがとりあえずMZ-700と同じ構成で実装しました。
-* 簡易なダイレクトロード機構を実装
-    * 関西FPGA・DE0勉強会でのデモに間に合わせるため、一番簡単なプログラムロードの仕組み(NiosIIから強制的にMZのRAMへ書き込む)を実装しました。この操作のため、SDカードのファイルアクセス・メニュー実装・メニュー呼び出し方法の実装が必要でした。
-* CGROMデータをMZ-1200用として修正
-    * 元々MZ-700用だったので、一部の空白キャラに矢印が入っていました。これを削除することでMZ-80K/C用としています。
-* I/Oの記事でColorGal5回路のRGBのビットを確認
-    * なぜか一般的な仕様と比較して、緑と赤が入れ替わっています。
-* PCG-8000調査
-    * 特筆すべき機能はありませんでした。
-* PCG-700/1200調査、回路図作成
-    * PCG-1200では、PCG-700のパターン定義時のバンク指定が、表示の時も有効になります。
+* Z80 core ''T80'' from OpenCores by Wllnar, Daniel and MikeJ
+* ''Looks like font'' from [MZ700WIN](http://retropc.net/mz-memories/) by marukun
+* MZ-NEW MONITOR
+* [FatFs module](http://elm-chan.org/fsw/ff/00index_j.html) by ChaN
+* [Japan Andriod Group Kobe](http://sites.google.com/site/androidjpkobe/)
