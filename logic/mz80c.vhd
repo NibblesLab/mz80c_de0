@@ -558,7 +558,7 @@ begin
 	);
 
 	PS2RCV : ps2kb port map (
-		RST => URST,
+		RST => ARST,
 		KCLK => ZCLK,
 		PS2CK => PS2_KBCLK,
 		PS2DT => PS2_KBDAT,
@@ -644,5 +644,10 @@ begin
 	--
 	KBEN_M<=KBEN and (not ZBACK);
 	LEDG<=(not SD_CS)&T_LEDG(8 downto 2)&ZLEDG(1 downto 0);
+	--GPIO0_D(0)<=PS2_KBCLK;
+	--GPIO0_D(1)<=PS2_KBDAT;
+	--GPIO0_D(2)<=KBEN;
+	--GPIO0_D(10 downto 3)<=KBDT;
+	--GPIO0_D(11)<=ARST;
 
 end rtl;

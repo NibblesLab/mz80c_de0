@@ -34,6 +34,10 @@ architecture Behavioral of ps2kb is
 --
 signal KEYDT : std_logic_vector(10 downto 0);
 signal CKDT : std_logic_vector(3 downto 0);
+--
+-- Parity
+--
+signal PARITY : std_logic;
 
 begin
 
@@ -41,15 +45,16 @@ begin
 	-- PS/2 recieve
 	--
 	process( RST, KCLK ) begin
-		if( RST='0' ) then
+		if RST='0' then
 			KEYDT<=(others=>'1');
+			DATA<=(others=>'0');
 			DTEN<='0';
-		elsif( KCLK'event and KCLK='1' ) then
+		elsif KCLK'event and KCLK='1' then
 			CKDT<=CKDT(2 downto 0)&PS2CK;
-			if( CKDT="0011" ) then
+			if CKDT="0011" then
 				KEYDT<=PS2DT&KEYDT(10 downto 1);
 			end if;
-			if( KEYDT(0)='0' and KEYDT(10)='1' ) then
+			if KEYDT(0)='0' and KEYDT(10)='1' and KEYDT(9)=not PARITY then
 				DTEN<='1';
 				DATA<=KEYDT(8 downto 1);
 				KEYDT<=(others=>'1');
@@ -59,5 +64,14 @@ begin
 		end if;
 	end process;
 
+	process( KEYDT(9 downto 2) )
+		variable TEMP : std_logic;
+	begin
+		TEMP:='0';
+		for I in 1 to 8 loop
+			TEMP:=TEMP xor KEYDT(I);
+		end loop;
+		PARITY<=TEMP;
+	end process;
 
 end Behavioral;
