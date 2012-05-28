@@ -66,6 +66,6 @@ Special thanks to ...
 -----------------------------
 * Z80 core ''T80'' from OpenCores by Wllnar, Daniel and MikeJ
 * ''Looks like font'' from [MZ700WIN](http://retropc.net/mz-memories/) by marukun
-* MZ-NEW MONITOR
+* [MZ-NEW MONITOR](http://retropc.net/mz-memories/mz700/kyodaku.html) by Takeharu Takada and Kenji Machida from Musasino Mycom Club
 * [FatFs module](http://elm-chan.org/fsw/ff/00index_j.html) by ChaN
 * [Japan Andriod Group Kobe](http://sites.google.com/site/androidjpkobe/)
