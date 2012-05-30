@@ -90,7 +90,8 @@ signal CASCADE : std_logic;
 --
 -- Decodes, misc
 --
-signal CS367 : std_logic;
+signal CSE_x : std_logic;
+signal CSE2_x : std_logic;
 signal DO367 : std_logic_vector(7 downto 0);
 signal BUF : std_logic_vector(9 downto 0);
 signal CSMROM : std_logic;
@@ -118,12 +119,12 @@ signal R : std_logic;
 signal G : std_logic;
 signal B : std_logic;
 signal VGATE : std_logic;
-signal CSVRAM : std_logic;
+signal CSD_x : std_logic;
 signal VRAMDO : std_logic_vector(7 downto 0);
 --
 -- PPI
 --
-signal CSPPI : std_logic;
+signal CSE0_x : std_logic;
 signal DOPPI : std_logic_vector(7 downto 0);
 --signal RBIT : std_logic;
 signal MOTOR : std_logic;
@@ -131,7 +132,7 @@ signal EIKANA : std_logic;
 --
 -- PIT
 --
-signal CSPIT : std_logic;
+signal CSE1_x : std_logic;
 signal DOPIT : std_logic_vector(7 downto 0);
 signal SOUNDEN : std_logic;
 signal SPKOUT : std_logic;
@@ -243,7 +244,9 @@ component videoout is
 		CK3125 : out std_logic;		-- Music Base Clock(31.25kHz)
 		-- CPU Signals
 		A      : in std_logic_vector(11 downto 0);	-- CPU Address Bus
-		CS_x   : in std_logic;								-- CPU Memory Request
+		CSD_x  : in std_logic;								-- CPU Memory Request(VRAM)
+		CSE_x  : in std_logic;								-- CPU Memory Request(Control)
+		RD_x   : in std_logic;								-- CPU Read Signal
 		WR_x   : in std_logic;								-- CPU Write Signal
 		DI     : in std_logic_vector(7 downto 0);		-- CPU Data Bus(in)
 		DO     : out std_logic_vector(7 downto 0);	-- CPU Data Bus(out)
@@ -324,7 +327,7 @@ begin
 		RST => RST_x,
 		CLK => CK2M,
 		A => A16(1 downto 0),
-		CS => CSPPI,
+		CS => CSE0_x,
 		WR => WR,
 		DI => DO,
 		DO => DOPPI,
@@ -350,7 +353,7 @@ begin
 		A => A16(1 downto 0),
 		DI => DO,
 		DO => DOPIT,
-		CS => CSPIT,
+		CS => CSE1_x,
 		WR => WR,
 		RD => RD,
 		CLK0 => CK2M,
@@ -382,7 +385,9 @@ begin
 		CK3125 => CK3125,			-- Music Base Clock(31.25kHz)
 		-- CPU Signals
 		A => A16(11 downto 0),	-- CPU Address Bus
-		CS_x => CSVRAM,			-- CPU Memory Request
+		CSD_x => CSD_x,			-- CPU Memory Request(VRAM)
+		CSE_x => CSE_x,			-- CPU Memory Request(Control)
+		RD_x => RD,					-- CPU Read Signal
 		WR_x => WR,					-- CPU Write Signal
 		DI => DO,					-- CPU Data Bus(in)
 		DO => VRAMDO,				-- CPU Data Bus(out)
@@ -423,7 +428,7 @@ begin
 		CLKIN => CK2M,
 		CLKOUT => SCLK,
 		GATE => SOUNDEN,
-		CS => CS367,
+		CS => CSE2_x,
 		WR => WR,
 		DI => DO,
 		DO => DO367
@@ -438,20 +443,22 @@ begin
 	--
 	-- Data Bus
 	--
-	DI <=	DOPPI when CSPPI='0' else
-			DOPIT when CSPIT='0' else
-			DO367 when CS367='0' else
-			VRAMDO when CSVRAM='0' else
+	DI <=	DOPPI when CSE0_x='0' else
+			DOPIT when CSE1_x='0' else
+			DO367 when CSE2_x='0' else
+			VRAMDO when CSD_x='0' else
 			ROMDO when CSMROM='0' else
 			RAMDI when CSRAM='0' else (others=>'0');
 
 	--
 	-- Chip Select
 	--
-	CSPPI<='0' when A16(15 downto 11)="11100" and A16(4 downto 2)="000" and MREQ='0' else '1';
-	CSPIT<='0' when A16(15 downto 11)="11100" and A16(4 downto 2)="001" and MREQ='0' else '1';
-	CS367<='0' when A16(15 downto 11)="11100" and A16(4 downto 2)="010" and MREQ='0' else '1';
-	CSVRAM<='0' when A16(15 downto 12)="1101" and MREQ='0' else '1';
+	CSE_x <='0' when A16(15 downto 12)="1110" and MREQ='0' else '1';
+	CSE0_x<='0' when CSE_x='0' and A16(4 downto 2)="000" and ((A16(11) or A16(10) or A16(9)) and MZMODE(1))='0' else '1';
+	CSE1_x<='0' when CSE_x='0' and A16(4 downto 2)="001" and ((A16(11) or A16(10) or A16(9)) and MZMODE(1))='0' else '1';
+	CSE2_x<='0' when CSE_x='0' and A16(4 downto 2)="010" and ((A16(11) or A16(10) or A16(9)) and MZMODE(1))='0' else '1';
+	--CSE3_x<='0' when CSE_x='0' and A16(4 downto 2)="011" and ((A16(11) or A16(10) or A16(9)) and MZMODE(1))='0' else '1';
+	CSD_x<='0' when A16(15 downto 12)="1101" and MREQ='0' else '1';
 	CSMROM<='0' when A16(15 downto 12)="0000" and MREQ='0' else '1';
 	CSRAM<='0' when (( A16(15)='0' and A16(14 downto 12)/="000" ) or A16(15 downto 14)="10" or A16(15 downto 12)="1100" ) and MREQ='0' else '1';
 

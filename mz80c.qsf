@@ -589,6 +589,7 @@ set_global_assignment -name VHDL_FILE logic/counter1.vhd
 set_global_assignment -name VHDL_FILE logic/counter2.vhd
 set_global_assignment -name VHDL_FILE logic/videoout.vhd
 set_global_assignment -name QIP_FILE logic/dpram2k.qip
+set_global_assignment -name QIP_FILE logic/ram1k.qip
 set_global_assignment -name QIP_FILE logic/pll50.qip
 set_global_assignment -name QIP_FILE logic/cgrom.qip
 set_global_assignment -name VHDL_FILE logic/ScanConv.vhd

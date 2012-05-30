@@ -25,7 +25,9 @@ entity videoout is
 		CK3125 : out std_logic;		-- Music Base Clock(31.25kHz)
 		-- CPU Signals
 		A      : in std_logic_vector(11 downto 0);	-- CPU Address Bus
-		CS_x   : in std_logic;								-- CPU Memory Request
+		CSD_x  : in std_logic;								-- CPU Memory Request(VRAM)
+		CSE_x  : in std_logic;								-- CPU Memory Request(Control)
+		RD_x   : in std_logic;								-- CPU Read Signal
 		WR_x   : in std_logic;								-- CPU Write Signal
 		DI     : in std_logic_vector(7 downto 0);		-- CPU Data Bus(in)
 		DO     : out std_logic_vector(7 downto 0);	-- CPU Data Bus(out)
@@ -55,6 +57,7 @@ architecture RTL of videoout is
 -- Clocks
 --
 signal CK8Mi   : std_logic;	-- 8MHz
+signal CK2Mi   : std_logic;	-- 2MHz
 --
 -- Registers
 --
@@ -65,19 +68,24 @@ signal VADR    : std_logic_vector(10 downto 0);	-- VRAM Address(selected)
 signal VADRC   : std_logic_vector(10 downto 0);	-- VRAM Address
 signal VADRL   : std_logic_vector(10 downto 0);	-- VRAM Address(latched)
 signal SDAT    : std_logic_vector(7 downto 0);	-- Shift Register to Display
-signal ADAT    : std_logic_vector(7 downto 0);	-- Color Attribute
+signal ADAT    : std_logic_vector(7 downto 0);	-- Color Attribute(B-in Color)
+signal CDAT    : std_logic_vector(7 downto 0);	-- Color Attribute(ColorGal5)
+signal ADATi   : std_logic_vector(7 downto 0);	-- Color Attribute(B-in Color, before confrict)
+signal CDATi   : std_logic_vector(7 downto 0);	-- Color Attribute(ColorGal5, before confrict)
 --
 -- CPU Access
 --
 signal MA      : std_logic_vector(11 downto 0);	-- Masked Address
 signal CSV_x   : std_logic;							-- Chip Select (VRAM)
 signal CSA_x   : std_logic;							-- Chip Select (ARAM)
-signal NCSV_x  : std_logic;							-- Chip Select (VRAM)
-signal NCSA_x  : std_logic;							-- Chip Select (ARAM)
+signal CSINV_x : std_logic;							-- Chip Select (Reverse)
+signal CSCG5_x : std_logic;							-- Chip Select (ColorGal5)
+signal NCSV_x  : std_logic;							-- Chip Select (VRAM, NiosII)
+signal NCSA_x  : std_logic;							-- Chip Select (ARAM, NiosII)
 signal VWEN    : std_logic;							-- WR + MREQ (VRAM)
 signal AWEN    : std_logic;							-- WR + MREQ (ARAM)
-signal NWEN0   : std_logic;							-- WR + CS (VRAM)
-signal NWEN1   : std_logic;							-- WR + CS (ARAM)
+signal NWEN0   : std_logic;							-- WR + CS (VRAM, NiosII)
+signal NWEN1   : std_logic;							-- WR + CS (ARAM, NiosII)
 --
 -- Internal Signals
 --
@@ -90,12 +98,18 @@ signal MR		: std_logic;							-- Display Signal (Mono, Red)
 signal BB		: std_logic;							-- Display Signal (B-in, Blue)
 signal BG		: std_logic;							-- Display Signal (B-in, Green)
 signal BR		: std_logic;							-- Display Signal (B-in, Red)
+signal CB		: std_logic;							-- Display Signal (ColorGal5, Blue)
+signal CG		: std_logic;							-- Display Signal (ColorGal5, Green)
+signal CR		: std_logic;							-- Display Signal (ColorGal5, Red)
 signal VRAMDO  : std_logic_vector(7 downto 0);	-- Data Bus Output for VRAM
 signal ARAMDO  : std_logic_vector(7 downto 0);	-- Data Bus Output for ARAM
+signal CRAMDO  : std_logic_vector(7 downto 0);	-- Data Bus Output for ARAM(ColorGal5)
 signal NDO0		: std_logic_vector(7 downto 0);	-- Data Bus Output for ARAM
 signal NDO1		: std_logic_vector(7 downto 0);	-- Data Bus Output for ARAM
 signal DCODE   : std_logic_vector(7 downto 0);	-- Display Code, Read From VRAM
 signal CGDAT   : std_logic_vector(7 downto 0);	-- Font Data To Display
+signal CCODE   : std_logic_vector(7 downto 0);	-- Color Code by ColorGal5
+signal INV		: std_logic;							-- Reverse Mode
 
 --
 -- Components
@@ -113,6 +127,17 @@ component dpram2k
 		wren_b		: IN STD_LOGIC  := '0';
 		q_a		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
 		q_b		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+	);
+end component;
+
+component ram1k
+	PORT
+	(
+		address		: IN STD_LOGIC_VECTOR (9 DOWNTO 0);
+		clock		: IN STD_LOGIC  := '1';
+		data		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		wren		: IN STD_LOGIC ;
+		q		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
 	);
 end component;
 
@@ -167,6 +192,14 @@ begin
 		q_b	 => NDO1
 	);
 
+	VCGAL5 : ram1k PORT MAP (
+		address	 => VADR(9 downto 0),
+		clock	 => CK8Mi,
+		data	 => CCODE,
+		wren	 => VWEN,
+		q	 => CRAMDO
+	);
+
 	VCGROM0 : cgrom PORT MAP (
 		address	 => DCODE&VCOUNT(2 downto 0),
 		clock	 => CK8Mi,
@@ -179,7 +212,7 @@ begin
 			inclk0	 => CK50M,
 			c0	 => CK12M5,
 			c1	 => CK8Mi,
-			c2	 => CK2M,
+			c2	 => CK2Mi,
 			c3	 => CK3125);
 
 	--
@@ -236,9 +269,10 @@ begin
 			end if;
 
 			-- Get Font data and Shift
-			if( HCOUNT(2 downto 0)="000" ) then
+			if HCOUNT(2 downto 0)="000" then
 				SDAT<=CGDAT;
-				ADAT<=ARAMDO;
+				ADATi<=ARAMDO;
+				CDATi<=CRAMDO;
 			else
 				SDAT<=SDAT(6 downto 0)&'0';
 			end if;
@@ -259,23 +293,43 @@ begin
 	end process;
 
 	--
+	-- Control Registers
+	--
+	process( RST, CK2Mi ) begin
+		if RST='0' then
+			INV<='0';
+		elsif CK2Mi'event and CK2Mi='0' then
+			if CSINV_x='0' and RD_x='0' then
+				INV<=MA(0);
+			end if;
+			if CSCG5_x='0' and WR_x='0' then
+				CCODE<=DI;
+			end if;
+		end if;
+	end process;
+
+	--
 	-- Mask by Mode
 	--
 	MA<=A when MZMODE(1)='1' else "00"&A(9 downto 0);
-	CSV_x<='0' when CS_x='0' and MA(11)='0' else '1';
-	CSA_x<='0' when CS_x='0' and MA(11)='1' else '1';
+	CSV_x<='0' when CSD_x='0' and MA(11)='0' else '1';
+	CSA_x<='0' when CSD_x='0' and MA(11)='1' else '1';
 	NCSV_x<='0' when NCS_x='0' and NA(15 downto 11)="11010" else '1';
 	NCSA_x<='0' when NCS_x='0' and NA(15 downto 11)="11011" else '1';
 	VWEN<=not(WR_x or CSV_x);
 	AWEN<=not(WR_x or CSA_x);
 	NWEN0<=not(NWR_x or NCSV_x);
 	NWEN1<=not(NWR_x or NCSA_x);
+	CSINV_x<='0' when CSE_x='0' and MZMODE(1)='1' and MA(11 downto 9)="000" and MA(4 downto 2)="101" else '1';
+	CSCG5_x<='0' when CSE_x='0' and MA(4 downto 2)="011" and ((MA(11) or MA(10) or MA(9)) and MZMODE(1))='0' else '1';
 
 	--
 	-- Bus Select
 	--
-	VADR<=MA(10 downto 0) when CS_x='0' else VADRC;
-	DCODE<=DI when CS_x='0' and WR_x='0' else VRAMDO;
+	VADR<=MA(10 downto 0) when CSD_x='0' else VADRC;
+	DCODE<=DI when CSV_x='0' and WR_x='0' else VRAMDO;
+	ADAT<=DI when CSA_x='0' and WR_x='0' else ADATi;
+	CDAT<=DI when CSD_x='0' and WR_x='0' else CDATi;
 	DO<=VRAMDO when MA(11)='0' else ARAMDO;
 	NDO<=NDO0 when NCSV_x='0' else
 		  NDO1 when NCSA_x='0' else
@@ -287,9 +341,16 @@ begin
 	-- Monoclome Monitor
 	MB<=SDAT(7) when HDISPEN='1' and VGATE='1' and MZMODE="00" else '0';
 	MR<=SDAT(7) when HDISPEN='1' and VGATE='1' and MZMODE="00" else '0';
-	MG<=SDAT(7) when HDISPEN='1' and VGATE='1' else '0';
+	MG<=not SDAT(7) when HDISPEN='1' and VGATE='1' and MZMODE(1)='1' and INV='1' else
+		 SDAT(7) when HDISPEN='1' and VGATE='1' else '0';
 	-- NIDECOM Color Board - not yet
-	-- Color Gal 5 - not yet
+	-- Color Gal 5
+	CB<=CDAT(0) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
+		 CDAT(4) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
+	CR<=CDAT(2) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
+		 CDAT(6) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
+	CG<=CDAT(1) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
+		 CDAT(5) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
 	-- Builtin Color
 	BB<=ADAT(4) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
 		 ADAT(0) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
@@ -302,22 +363,23 @@ begin
 	-- Output
 	--
 	CK8M<=CK8Mi;
+	CK2M<=CK2Mi;
 	VBLANK<=not VDISPEN;
 	HBLANK<=HBLANKi;
 	ROUT<=BR  when DMODE="11" or BACK='0' else
 			MR  when DMODE="00" else
 			'0' when DMODE="01" else
-			'0' when DMODE="10" else
+			CR  when DMODE="10" else
 			'0';
 	GOUT<=BG  when DMODE="11" or BACK='0' else
 			MG  when DMODE="00" else
 			'0' when DMODE="01" else
-			'0' when DMODE="10" else
+			CG  when DMODE="10" else
 			'0';
 	BOUT<=BB  when DMODE="11" or BACK='0' else
 			MB  when DMODE="00" else
 			'0' when DMODE="01" else
-			'0' when DMODE="10" else
+			CB  when DMODE="10" else
 			'0';
 
 end RTL;
