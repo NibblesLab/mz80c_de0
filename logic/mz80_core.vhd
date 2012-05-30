@@ -183,20 +183,29 @@ component i8255
 		WR     : in std_logic;
 		DI     : in std_logic_vector(7 downto 0);
 		DO     : out std_logic_vector(7 downto 0);
+		-- Port A&B
+		KBEN   : in std_logic;								-- PS/2 Keyboard Data Valid
+		KBDT   : in std_logic_vector(7 downto 0);		-- PS/2 Keyboard Data
+		KCLK   : in std_logic;								-- Key controller base clock
+		-- Port C
+		CLKIN  : in std_logic;								-- Cursor Blink signal
+--		FCLK   : in std_logic;
+		VBLNK  : in std_logic;								-- V-BLANK signal
+		EIKANA : out std_logic;								-- EISUU/KANA LED
+		VGATE  : out std_logic;								-- Video Outpu Enable
+		RBIT   : in std_logic;								-- Read Tape Bit
+		SENSE  : in std_logic;								-- Tape Rotation Sense
+		MOTOR  : out std_logic;								-- CMT Motor ON
+		-- for Debug
 		LDDAT  : out std_logic_vector(7 downto 0);
 --		LDDAT2 : out std_logic;
 --		LDSNS  : out std_logic;
-		CLKIN  : in std_logic;
-		KCLK   : in std_logic;
---		FCLK   : in std_logic;
-		VBLNK  : in std_logic;
-		EIKANA : out std_logic;
-		VGATE  : out std_logic;
-		RBIT   : in std_logic;
-		SENSE  : in std_logic;
-		MOTOR  : out std_logic;
-		KBEN   : in std_logic;
-		KBDT   : in std_logic_vector(7 downto 0)
+		-- BackDoor for Sub-Processor
+		NCLK	 : in std_logic;								-- NiosII Clock
+		NA		 : in std_logic_vector(15 downto 0);	-- NiosII Address Bus
+		NCS_x  : in std_logic;								-- NiosII Memory Request
+		NWR_x	 : in std_logic;								-- NiosII Write Signal
+		NDI	 : in std_logic_vector(7 downto 0)		-- NiosII Data Bus(in)
 	);
 end component;
 
@@ -331,20 +340,29 @@ begin
 		WR => WR,
 		DI => DO,
 		DO => DOPPI,
+		-- Port A&B
+		KBEN => KBEN,								-- PS/2 Keyboard Data Valid
+		KBDT => KBDT,								-- PS/2 Keyboard Data
+		KCLK => CK2M,								-- Key controller base clock
+		-- Port C
+		CLKIN => SCLK,								-- Cursor Blink signal
+--		FCLK => NTSCCLK,
+		VBLNK => VBLNK,							-- V-BLANK signal
+		EIKANA => EIKANA,							-- EISUU/KANA LED
+		VGATE => VGATE,							-- Video Outpu Enable
+		RBIT => GPIO1_D(0),						-- Read Tape Bit
+		SENSE => SW(0),							-- Tape Rotation Sense
+		MOTOR => MOTOR,							-- CMT Motor ON
+		-- for Debug
 		LDDAT => LDDAT,
 --		LDDAT2 => LD(5),
 --		LDSNS => LD(6),
-		CLKIN => SCLK,
-		KCLK => CK2M,
---		FCLK => NTSCCLK,
-		VBLNK => VBLNK,
-		EIKANA => EIKANA,
-		VGATE => VGATE,
-		RBIT => GPIO1_D(0),
-		SENSE => SW(0),
-		MOTOR => MOTOR,
-		KBEN => KBEN,
-		KBDT => KBDT
+		-- BackDoor for Sub-Processor
+		NCLK => NCLK,								-- NiosII Clock
+		NA => NA,									-- NiosII Address Bus
+		NCS_x => NCS_x,							-- NiosII Memory Request
+		NWR_x => NWR_x,							-- NiosII Write Signal
+		NDI => NDI									-- NiosII Data Bus(in)
 	);
 
 	PIT0 : i8253 port map (

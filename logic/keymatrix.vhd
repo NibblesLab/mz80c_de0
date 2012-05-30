@@ -20,12 +20,21 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity keymatrix is
 	Port (
 		RST   : in std_logic;
+		-- i8255
 		PA    : in std_logic_vector(3 downto 0);
 		PB    : out std_logic_vector(7 downto 0);
-		KCLK  : in std_logic;
+		-- PS/2 Keyboard Data
+		KCLK  : in std_logic;								-- Key controller base clock
+		KBEN  : in std_logic;								-- PS/2 Keyboard Data Valid
+		KBDT  : in std_logic_vector(7 downto 0);		-- PS/2 Keyboard Data
+		-- for Debug
 		LDDAT : out std_logic_vector(7 downto 0);
-		KBEN  : in std_logic;
-		KBDT  : in std_logic_vector(7 downto 0)
+		-- BackDoor for Sub-Processor
+		NCLK	: in std_logic;								-- NiosII Clock
+		NA		: in std_logic_vector(15 downto 0);		-- NiosII Address Bus
+		NCS_x : in std_logic;								-- NiosII Memory Request
+		NWR_x	: in std_logic;								-- NiosII Write Signal
+		NDI	: in std_logic_vector(7 downto 0)		-- NiosII Data Bus(in)
 	);
 end keymatrix;
 
@@ -60,6 +69,11 @@ signal SCAN14 : std_logic_vector(7 downto 0);
 signal MTEN : std_logic_vector(3 downto 0);
 signal MTDT : std_logic_vector(7 downto 0);
 signal F_KBDT : std_logic_vector(7 downto 0);
+--
+-- Backdoor Access
+--
+signal NWEN : std_logic;
+signal NCSK_x : std_logic;
 
 --
 -- Components
@@ -83,12 +97,12 @@ begin
 	-- Instantiation
 	--
 	MAP0 : dpram1kr PORT MAP (
-		data	 => "00000000",
+		data	 => NDI,
 		rdaddress	 => F_KBDT,
 		rdclock	 => KCLK,
-		wraddress	 => "11111111",
-		wrclock	 => '1',
-		wren	 => '0',
+		wraddress	 => NA(7 downto 0),
+		wrclock	 => NCLK,
+		wren	 => NWEN,
 		q	 => MTDT
 	);
 
@@ -167,5 +181,11 @@ begin
 	    (not SCAN11) when PA="1011" else
 	    (not SCAN12) when PA="1100" else
 	    (not SCAN13) when PA="1101" else (others=>'1');
+
+	--
+	-- Backdoor access
+	--
+	NCSK_x<='0' when NCS_x='0' and NA(15 downto 8)="11000000" else '1';
+	NWEN<=not(NWR_x or NCSK_x);
 
 end Behavioral;

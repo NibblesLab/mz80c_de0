@@ -2,24 +2,19 @@
 -- i8255.vhd
 --
 -- Intel 8255 (PPI:Programmable Peripheral Interface) partiality compatible module
--- for MZ-700 on FPGA
+-- for MZ-80C on FPGA
 --
 -- Port A : Output, mode 0 only
 -- Port B : Input, mode 0 only
 -- Port C : Input(7-4)&Output(3-0), mode 0 only, bit set/reset support
 --
--- Nibbles Lab. 2005
+-- Nibbles Lab. 2005-2012
 --
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
-
---  Uncomment the following lines to use the declarations that are
---  provided for instantiating Xilinx primitive components.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity i8255 is
 	Port (
@@ -30,20 +25,29 @@ entity i8255 is
 		WR     : in std_logic;
 		DI     : in std_logic_vector(7 downto 0);
 		DO     : out std_logic_vector(7 downto 0);
+		-- Port A&B
+		KBEN   : in std_logic;								-- PS/2 Keyboard Data Valid
+		KBDT   : in std_logic_vector(7 downto 0);		-- PS/2 Keyboard Data
+		KCLK   : in std_logic;								-- Key controller base clock
+		-- Port C
+		CLKIN  : in std_logic;								-- Cursor Blink signal
+--		FCLK   : in std_logic;
+		VBLNK  : in std_logic;								-- V-BLANK signal
+		EIKANA : out std_logic;								-- EISUU/KANA LED
+		VGATE  : out std_logic;								-- Video Outpu Enable
+		RBIT   : in std_logic;								-- Read Tape Bit
+		SENSE  : in std_logic;								-- Tape Rotation Sense
+		MOTOR  : out std_logic;								-- CMT Motor ON
+		-- for Debug
 		LDDAT  : out std_logic_vector(7 downto 0);
 --		LDDAT2 : out std_logic;
 --		LDSNS  : out std_logic;
-		CLKIN  : in std_logic;
-		KCLK   : in std_logic;
---		FCLK   : in std_logic;
-		VBLNK  : in std_logic;
-		EIKANA : out std_logic;
-		VGATE  : out std_logic;
-		RBIT   : in std_logic;
-		SENSE  : in std_logic;
-		MOTOR  : out std_logic;
-		KBEN   : in std_logic;
-		KBDT   : in std_logic_vector(7 downto 0)
+		-- BackDoor for Sub-Processor
+		NCLK	 : in std_logic;								-- NiosII Clock
+		NA		 : in std_logic_vector(15 downto 0);	-- NiosII Address Bus
+		NCS_x  : in std_logic;								-- NiosII Memory Request
+		NWR_x	 : in std_logic;								-- NiosII Write Signal
+		NDI	 : in std_logic_vector(7 downto 0)		-- NiosII Data Bus(in)
 	);
 end i8255;
 
@@ -82,12 +86,21 @@ signal SWIN : std_logic_vector(3 downto 0);
 component keymatrix
 	Port (
 		RST   : in std_logic;
+		-- i8255
 		PA    : in std_logic_vector(3 downto 0);
 		PB    : out std_logic_vector(7 downto 0);
-		KCLK  : in std_logic;
+		-- PS/2 Keyboard Data
+		KCLK  : in std_logic;								-- Key controller base clock
+		KBEN  : in std_logic;								-- PS/2 Keyboard Data Valid
+		KBDT  : in std_logic_vector(7 downto 0);		-- PS/2 Keyboard Data
+		-- for Debug
 		LDDAT : out std_logic_vector(7 downto 0);
-		KBEN  : in std_logic;
-		KBDT  : in std_logic_vector(7 downto 0)
+		-- BackDoor for Sub-Processor
+		NCLK	: in std_logic;								-- NiosII Clock
+		NA		: in std_logic_vector(15 downto 0);		-- NiosII Address Bus
+		NCS_x : in std_logic;								-- NiosII Memory Request
+		NWR_x	: in std_logic;								-- NiosII Write Signal
+		NDI	: in std_logic_vector(7 downto 0)		-- NiosII Data Bus(in)
 	);
 end component;
 
@@ -98,12 +111,21 @@ begin
 	--
 	keys : keymatrix port map (
 		RST => RST,
+		-- i8255
 		PA => PA(3 downto 0),
 		PB => PB,
-		KCLK => KCLK,
+		-- PS/2 Keyboard Data
+		KCLK => KCLK,							-- Key controller base clock
+		KBEN => KBEN,							-- PS/2 Keyboard Data Valid
+		KBDT => KBDT,							-- PS/2 Keyboard Data
+		-- for Debug
 		LDDAT => LDDAT,
-		KBEN => KBEN,
-		KBDT => KBDT
+		-- BackDoor for Sub-Processor
+		NCLK => NCLK,							-- NiosII Clock
+		NA => NA,								-- NiosII Address Bus
+		NCS_x => NCS_x,						-- NiosII Memory Request
+		NWR_x => NWR_x,						-- NiosII Write Signal
+		NDI => NDI								-- NiosII Data Bus(in)
 	);
 
 	--
@@ -180,7 +202,7 @@ begin
 	    VBLNK&TBLNK&RBIT&MTR&PC(3 downto 0) when SELPC='1' else (others=>'1');
 
 	--
-	-- Remote
+	-- CMT Remote Control
 	--
 	MOTOR<=MTR;
 	process( KCLK ) begin
