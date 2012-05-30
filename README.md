@@ -58,7 +58,7 @@ How to reproduction project
     * mzctrl.c
     * mzctrl.h
 * Delete hello\_world.c.
-* At Project Explorer, open mz80c\_de0\_soft, then right-click and select Refresh(F5).
+* At Project Explorer, expand mz80c\_de0\_soft, then right-click and select Refresh(F5).
 * Build project. Project->Build All
 * Program to DE0 board with mz80c\_de0\_soft.elf.
 
