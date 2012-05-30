@@ -1,14 +1,17 @@
 /*
- * key.c
+ * MZ-80C on FPGA (Altera DE0 version)
+ * PS/2 Keyboard Input routines
  *
- *  Created on: 2012/05/11
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
+
 #include "system.h"
 #include "altera_avalon_pio_regs.h"
 #include "sys/alt_irq.h"
 #include "key.h"
 
+// Key Code -> ASCII Code table
 unsigned char kcconv[2][144]=
    {{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x09,0x00,0x00,
      0x00,0x00,0x00,0x00,0x00,0x71,0x31,0x00,0x00,0x00,0x7a,0x73,0x61,0x77,0x32,0x00,
@@ -32,6 +35,9 @@ unsigned char kcconv[2][144]=
 
 volatile keyb_t key;
 
+/*
+ * Key Input ISR
+ */
 static void key_input(void* context)
 {
 	volatile keyb_t* key_pt = (volatile keyb_t*)context;
@@ -43,6 +49,9 @@ static void key_input(void* context)
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(KBEN_BASE, 0xf);
 }
 
+/*
+ * Key Input ISR registration
+ */
 void key_int_regist(void)
 {
 	alt_ic_isr_register(KBEN_IRQ_INTERRUPT_CONTROLLER_ID, KBEN_IRQ, key_input, (void*)&key, 0x0);
@@ -50,6 +59,9 @@ void key_int_regist(void)
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(KBEN_BASE, 0xf);
 }
 
+/*
+ * Get 1 character
+ */
 unsigned char get_key(void)
 {
 	unsigned char c=0,k;
@@ -59,12 +71,12 @@ unsigned char get_key(void)
 		key.rptr=key.rptr&0x1f;
 		switch(k){
 		case 0xf0:
-			key.flagf0=1;
+			key.flagf0=1;	// Break Code
 			break;
 		case 0xe0:
-			key.flage0=1;
+			key.flage0=1;	// Extended Code
 			break;
-		case 0x12:
+		case 0x12:		// Left Shift Key
 			if(key.flage0==0){
 				if(key.flagf0){
 					key.Lshift=0;
@@ -75,7 +87,7 @@ unsigned char get_key(void)
 			key.flagf0=0;
 			key.flage0=0;
 			break;
-		case 0x59:
+		case 0x59:		// Right Shift Key
 			if(key.flage0==0){
 				if(key.flagf0){
 					key.Rshift=0;
@@ -86,7 +98,7 @@ unsigned char get_key(void)
 			key.flagf0=0;
 			key.flage0=0;
 			break;
-		default:
+		default:		// Convert to ASCII
 			if(key.flagf0==0)
 				c=kcconv[key.Lshift|key.Rshift][k];
 			key.flagf0=0;

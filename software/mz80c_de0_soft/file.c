@@ -1,9 +1,11 @@
 /*
- * file.c
+ * MZ-80C on FPGA (Altera DE0 version)
+ * File Access routines
  *
- *  Created on: 2012/05/17
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
+
 #include "system.h"
 #include "alt_types.h"
 #include <stdio.h>
@@ -18,6 +20,9 @@ extern DIR dirs;
 extern FILINFO finfo;
 extern unsigned char fname[13];
 
+/*
+ * Force put memory from MZT file
+ */
 void direct_load(void)
 {
 	FIL fobj;

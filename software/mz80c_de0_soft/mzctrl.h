@@ -1,8 +1,9 @@
 /*
- * mzctrl.h
+ * MZ-80C on FPGA (Altera DE0 version)
+ * MZ control routines header
  *
- *  Created on: 2012/05/07
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
 
 #ifndef MZCTRL_H_

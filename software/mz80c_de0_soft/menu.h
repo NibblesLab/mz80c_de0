@@ -1,8 +1,9 @@
 /*
- * menu.h
+ * MZ-80C on FPGA (Altera DE0 version)
+ * MENU Select routines header
  *
- *  Created on: 2012/05/10
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
 
 #ifndef MENU_H_

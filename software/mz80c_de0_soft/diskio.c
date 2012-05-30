@@ -1,3 +1,11 @@
+/*
+ * MZ-80C on FPGA (Altera DE0 version)
+ * Disk I/O routines
+ *
+ * (c) Nibbles Lab. 2012
+ *
+ */
+
 #include "sys/alt_stdio.h"
 #include "system.h"
 #include "altera_avalon_spi.h"
@@ -41,7 +49,9 @@ UBYTE EN_BLOCK;
 //	putss("\r");
 //}
 
-
+/*
+ * Send MMC Access Command
+ */
 unsigned char mmc_cmd(unsigned char cmd, DWORD addr){
 	unsigned char c[6],d;
 	unsigned int n;
@@ -73,6 +83,9 @@ unsigned char mmc_cmd(unsigned char cmd, DWORD addr){
 	return(d);
 }
 
+/*
+ * Terminate Command
+ */
 void mmc_quit(void){
 	unsigned char c,d;
 	unsigned int n;
@@ -84,6 +97,9 @@ void mmc_quit(void){
 	n=alt_avalon_spi_command(SPI_0_BASE, SPI_DUMMY_PORT, 1, &c, 0, &d, 0);
 }
 
+/*
+ * Send Command No.5
+ */
 DSTATUS cmd0(void){
 	unsigned char c=0xff, d, r;
 	unsigned int i;
@@ -118,6 +134,9 @@ DSTATUS cmd0(void){
 	return 0;
 }
 
+/*
+ * Send Command No.55
+ */
 DSTATUS cmd55(void){
 	unsigned char c=0xff, d, r;
 
@@ -137,6 +156,9 @@ DSTATUS cmd55(void){
 	return 0;
 }
 
+/*
+ * Send Command No.41
+ */
 unsigned char cmd41(DWORD addr){
 	unsigned char c=0xff, d, r;
 
@@ -155,6 +177,9 @@ unsigned char cmd41(DWORD addr){
 	return d;
 }
 
+/*
+ * Interface Initialize
+ */
 DSTATUS disk_initialize(
   BYTE Drive          /* 物理ドライブ番号 */
 )
@@ -266,6 +291,9 @@ DSTATUS disk_initialize(
 
 }
 
+/*
+ * Read Status
+ */
 DSTATUS disk_status(
   BYTE Drive          /* 物理ドライブ番号 */
 )
@@ -273,7 +301,9 @@ DSTATUS disk_status(
 	return status;
 }
 
-
+/*
+ * Read 1 Sector
+ */
 DRESULT disk_read(
   BYTE Drive,          // 物理ドライブ番号
   BYTE* Buffer,        // 読み出しバッファへのポインタ
@@ -332,7 +362,9 @@ DRESULT disk_read(
 	return RES_OK;
 }
 
-
+/*
+ * Write 1 Sector
+ */
 DRESULT disk_write(
   BYTE Drive,          // 物理ドライブ番号
   const BYTE* Buffer,  // 書き込むデータへのポインタ
@@ -382,7 +414,9 @@ DRESULT disk_write(
 	return RES_OK;
 }
 
-/* f_mkfsを使わないので手抜き */
+/*
+ * Disk Control
+ */
 DRESULT disk_ioctl (
   BYTE Drive,      /* 物理ドライブ番号 */
   BYTE Command,    /* 制御コマンド */
@@ -392,6 +426,9 @@ DRESULT disk_ioctl (
 	return RES_OK;
 }
 
+/*
+ * Get Time
+ */
 DWORD get_fattime(void)
 {
 	return 0x36210000;	// 2007/1/1 0:00:00

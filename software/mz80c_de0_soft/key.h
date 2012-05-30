@@ -1,8 +1,9 @@
 /*
- * key.h
+ * MZ-80C on FPGA (Altera DE0 version)
+ * PS/2 Keyboard Input routines header
  *
- *  Created on: 2012/05/11
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
 
 #ifndef KEY_H_

@@ -1,8 +1,9 @@
 /*
- * file.h
+ * MZ-80C on FPGA (Altera DE0 version)
+ * File Access routines header
  *
- *  Created on: 2012/05/17
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
 
 #ifndef FILE_H_

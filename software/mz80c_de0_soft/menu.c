@@ -1,9 +1,11 @@
 /*
- * menu.c
+ * MZ-80C on FPGA (Altera DE0 version)
+ * MENU Select routines
  *
- *  Created on: 2012/05/10
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
+
 #include "system.h"
 #include "alt_types.h"
 #include <stdio.h>
@@ -18,6 +20,7 @@
 
 extern volatile z80_t z80_status;
 
+// Menu members
 static unsigned char main_menu_item[]="    VIEW    \0 SET MEDIA >\0 REL MEDIA >\0 DIR. LOAD >\0    ROMS   >";
 static unsigned int main_menu_next[6]={0,1,2,99,3,0};
 
@@ -40,6 +43,9 @@ extern DIR dirs;
 extern FILINFO finfo;
 extern unsigned char fname[13];
 
+/*
+ * Display Frame by Item numbers
+ */
 void frame(unsigned int level, unsigned int items, unsigned int select)
 {
 	unsigned int i;
@@ -70,6 +76,9 @@ void frame(unsigned int level, unsigned int items, unsigned int select)
 	}
 }
 
+/*
+ * Display Items
+ */
 void disp_menu(unsigned int level, unsigned int n_menu)
 {
 	int i;
@@ -79,6 +88,9 @@ void disp_menu(unsigned int level, unsigned int n_menu)
 	}
 }
 
+/*
+ * Select Menu
+ */
 int select_menu(unsigned int level, unsigned int n_menu)
 {
 	unsigned int num=0;
@@ -116,6 +128,9 @@ int select_menu(unsigned int level, unsigned int n_menu)
 	}
 }
 
+/*
+ * Display File Names as Menu Items
+ */
 void disp_files(unsigned int level, unsigned char *items, unsigned int total)
 {
 	int i,j,k;
@@ -143,6 +158,9 @@ void disp_files(unsigned int level, unsigned char *items, unsigned int total)
 	}
 }
 
+/*
+ * File Select Menu
+ */
 int file_menu(unsigned int level, unsigned int select)
 {
 	FRESULT f;
@@ -246,6 +264,9 @@ int file_menu(unsigned int level, unsigned int select)
 
 }
 
+/*
+ * Root Menu
+ */
 int menu(unsigned int level, unsigned int n_menu, unsigned int select)
 {
 	int s,ss=0;

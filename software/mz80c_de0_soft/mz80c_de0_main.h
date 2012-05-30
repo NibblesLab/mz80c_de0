@@ -1,8 +1,9 @@
 /*
- * mz80c_de0_main.h
+ * MZ-80C on FPGA (Altera DE0 version)
+ * Main module header
  *
- *  Created on: 2012/05/11
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
 
 #ifndef MZ80C_DE0_MAIN_H_
