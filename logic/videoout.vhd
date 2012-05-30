@@ -345,12 +345,12 @@ begin
 		 SDAT(7) when HDISPEN='1' and VGATE='1' else '0';
 	-- NIDECOM Color Board - not yet
 	-- Color Gal 5
-	CB<=CDAT(0) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
-		 CDAT(4) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
-	CR<=CDAT(2) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
-		 CDAT(6) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
-	CG<=CDAT(1) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
-		 CDAT(5) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
+	CB<=CDAT(0) when HDISPEN='1' and SDAT(7)='1' else
+		 CDAT(4) when HDISPEN='1' and SDAT(7)='0' else '0';
+	CR<=CDAT(2) when HDISPEN='1' and SDAT(7)='1' else
+		 CDAT(6) when HDISPEN='1' and SDAT(7)='0' else '0';
+	CG<=CDAT(1) when HDISPEN='1' and SDAT(7)='1' else
+		 CDAT(5) when HDISPEN='1' and SDAT(7)='0' else '0';
 	-- Builtin Color
 	BB<=ADAT(2) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
 		 ADAT(6) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
