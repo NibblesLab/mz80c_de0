@@ -352,12 +352,12 @@ begin
 	CG<=CDAT(1) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
 		 CDAT(5) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
 	-- Builtin Color
-	BB<=ADAT(4) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
-		 ADAT(0) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
-	BR<=ADAT(5) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
-		 ADAT(1) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
-	BG<=ADAT(6) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
-		 ADAT(2) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
+	BB<=ADAT(2) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
+		 ADAT(6) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
+	BR<=ADAT(0) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
+		 ADAT(4) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
+	BG<=ADAT(1) when HDISPEN='1' and VGATE='1' and SDAT(7)='1' else
+		 ADAT(5) when HDISPEN='1' and VGATE='1' and SDAT(7)='0' else '0';
 
 	--
 	-- Output

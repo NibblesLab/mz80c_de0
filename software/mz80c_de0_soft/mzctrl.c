@@ -1,8 +1,9 @@
 /*
- * mzctrl.c
+ * MZ-80C on FPGA (Altera DE0 version)
+ * MZ control routines
  *
- *  Created on: 2012/05/07
- *      Author: ohishi
+ * (c) Nibbles Lab. 2012
+ *
  */
 
 #include "system.h"
@@ -33,7 +34,9 @@ unsigned char adconv[256]=
 
 volatile z80_t z80_status;
 
-// ISR
+/*
+ * Push Bottun ISR
+ */
 static void menu_button(void* context)
 {
 	volatile z80_t* z80status_pt = (volatile z80_t*)context;
@@ -47,6 +50,9 @@ static void menu_button(void* context)
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(INT_BUTTON_BASE, 0xf);
 }
 
+/*
+ * Push Bottun ISR registration
+ */
 void button_int_regist(void)
 {
 	alt_ic_isr_register(INT_BUTTON_IRQ_INTERRUPT_CONTROLLER_ID, INT_BUTTON_IRQ, menu_button, (void*)&z80_status, 0x0);
@@ -54,11 +60,17 @@ void button_int_regist(void)
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(INT_BUTTON_BASE,0xf);
 }
 
+/*
+ * Release Reset for MZ
+ */
 void MZ_release(void)
 {
 	IOWR_ALTERA_AVALON_PIO_DATA(Z80CTRL_BASE,0x03);	// Reset Release
 }
 
+/*
+ * Bus Request for MZ
+ */
 void MZ_Brequest(void)
 {
 	unsigned int i;
@@ -71,10 +83,13 @@ void MZ_Brequest(void)
 		buvram[i]=((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i];
 		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i]=0;
 		buaram[i]=((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd800))[i];
-		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd800))[i]=0x70;
+		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd800))[i]=0x07;
 	}
 }
 
+/*
+ * Bus Release for MZ
+ */
 void MZ_Brelease(void)
 {
 	unsigned int i;
@@ -89,11 +104,17 @@ void MZ_Brelease(void)
 
 }
 
+/*
+ * Display 1 character to MZ screen
+ */
 void MZ_disp(unsigned int x, unsigned int y, unsigned char ch)
 {
 	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[y*40+x]=adconv[ch];
 }
 
+/*
+ * Display Message(until NULL) to MZ screen
+ */
 void MZ_msg(unsigned int x, unsigned int y, unsigned char *msg)
 {
 	while((*msg)!=0){
@@ -107,6 +128,9 @@ void MZ_msg(unsigned int x, unsigned int y, unsigned char *msg)
 	}
 }
 
+/*
+ * Reverse Display in Rectangle Area
+ */
 void crev(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2)
 {
 	unsigned char a;
