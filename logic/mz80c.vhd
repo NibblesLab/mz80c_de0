@@ -150,12 +150,16 @@ signal FL_ADDR0 : std_logic_vector(21 downto 0);
 -- Misc
 --
 signal URST : std_logic;
+signal FRST : std_logic;
 signal ARST : std_logic;
 signal MRST : std_logic;
-signal BUF : std_logic_vector(9 downto 0);
+signal ZRST : std_logic;
 signal SCLK : std_logic;
+signal BUF : std_logic_vector(9 downto 0);
 signal CNT5 : std_logic_vector(4 downto 0);
 signal SR_BTN : std_logic_vector(7 downto 0);
+signal ZR_BTN : std_logic_vector(7 downto 0);
+signal FR_BTN : std_logic_vector(7 downto 0);
 signal F_BTN : std_logic;
 signal MZMODE : std_logic_vector(1 downto 0);
 signal DMODE : std_logic_vector(1 downto 0);
@@ -401,7 +405,7 @@ begin
 	--
 	MZ80 : mz80_core port map(
 		-- Core I/O
-		RST_x => ZCTRL(1),
+		RST_x => ZRST,
 		ZCLK => ZCLK,
 		A => ZA16,
 		RAMDO => ZDO,
@@ -611,26 +615,26 @@ begin
 	FL_BYTE_N<='1';
 
 	--
-	-- Asynchronous Reset with automatic
+	-- Filter and Asynchronous Reset with automatic
 	--
 	URST<='0' when BUF(9 downto 5)="00000" else '1';
-	ARST<=URST and MRST;
-	process( CLOCK_50 ) begin
-		if CLOCK_50'event and CLOCK_50='1' then
-			BUF<=BUF(8 downto 0)&BUTTON(0);
+	process( CLOCK_50_2 ) begin
+		if( CLOCK_50_2'event and CLOCK_50_2='1' ) then
+			BUF<=BUF(8 downto 0)&'1';
 		end if;
 	end process;
 
-	--
-	-- Filter
-	--
 	process( URST, SCLK ) begin
 		if URST='0' then
 			CNT5<=(others=>'0');
 			SR_BTN<=(others=>'1');
+			ZR_BTN<=(others=>'1');
+			FR_BTN<=(others=>'0');
 		elsif SCLK'event and SCLK='1' then
 			if CNT5="11111" then
-				SR_BTN<=SR_BTN(6 downto 0)&BUTTON(1);
+				SR_BTN<=SR_BTN(6 downto 0)&(BUTTON(1) or (not BUTTON(0)));	-- only BUTTON1
+				ZR_BTN<=ZR_BTN(6 downto 0)&((not BUTTON(1)) or BUTTON(0));	-- only BUTTON0
+				FR_BTN<=FR_BTN(6 downto 0)&(BUTTON(1) or BUTTON(0));			-- both 0&1
 				CNT5<=(others=>'0');
 			else
 				CNT5<=CNT5+'1';
@@ -638,6 +642,9 @@ begin
 		end if;
 	end process;
 	F_BTN<='0' when SR_BTN="00000000" else '1';
+	FRST<='0' when FR_BTN="00000000" else '1';
+	ARST<=URST and FRST and MRST;
+	ZRST<='0' when (ZR_BTN="00000000" and ZBACK='1') or ZCTRL(1)='0' else '1';
 
 	--
 	-- Misc
