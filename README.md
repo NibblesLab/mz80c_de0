@@ -12,7 +12,7 @@ Requirements
 
 How to reproduction project
 ----------------------------------------
-1. Download zip file.
+1. Download [zip](https://github.com/NibblesLab/mz80c_de0/zipball/master) file.
 * Create folder to build project in your PC.
 * Put these files in zip to folder.
     * logic/
