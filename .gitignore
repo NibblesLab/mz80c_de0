@@ -192,6 +192,7 @@ create-this-app
 *.objdump
 sopc_builder_log.txt
 *_hw.tcl~
+*parallel.txt
 
 #################################
 ## Ignore files in this project
