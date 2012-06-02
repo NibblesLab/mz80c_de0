@@ -245,6 +245,7 @@ component videoout is
 		RST    : in std_logic;		-- Reset
 		MZMODE : in std_logic_vector(1 downto 0);		-- Hardware Mode
 		DMODE  : in std_logic_vector(1 downto 0);		-- Display Mode
+		PCGSW  : in std_logic;		-- PCG Mode
 		-- Clocks
 		CK50M  : in std_logic;		-- Master Clock(50MHz)
 		CK12M5 : out std_logic;		-- VGA Clock(12.5MHz)
@@ -395,6 +396,7 @@ begin
 		RST => RST_x,				-- Reset
 		MZMODE => MZMODE,			-- Hardware Mode
 		DMODE => DMODE,			-- Display Mode
+		PCGSW => SW(0),			-- PCG Mode
 		-- Clocks
 		CK50M => CLOCK_50,		-- Master Clock(50MHz)
 		CK12M5 => CK12M5,			-- VGA Clock(12.5MHz)

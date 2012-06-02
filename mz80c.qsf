@@ -600,4 +600,5 @@ set_global_assignment -name VHDL_FILE logic/sdram.vhd
 set_global_assignment -name QIP_FILE logic/pll100.qip
 set_global_assignment -name VHDL_FILE logic/seg7.vhd
 set_global_assignment -name VHDL_FILE logic/mctrl.vhd
+set_global_assignment -name VHDL_FILE logic/pcg.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

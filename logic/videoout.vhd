@@ -17,6 +17,7 @@ entity videoout is
 		RST    : in std_logic;		-- Reset
 		MZMODE : in std_logic_vector(1 downto 0);		-- Hardware Mode
 		DMODE  : in std_logic_vector(1 downto 0);		-- Display Mode
+		PCGSW  : in std_logic;		-- PCG Mode
 		-- Clocks
 		CK50M  : in std_logic;		-- Master Clock(50MHz)
 		CK12M5 : out std_logic;		-- VGA Clock(12.5MHz)
@@ -141,12 +142,28 @@ component ram1k
 	);
 end component;
 
-component cgrom
-	PORT
-	(
-		address	: IN STD_LOGIC_VECTOR (10 DOWNTO 0);
-		clock		: IN STD_LOGIC  := '1';
-		q			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+component pcg
+	Port (
+		RST_x  : in std_logic;
+		-- CG-ROM I/F
+		ROMA   : in std_logic_vector(10 downto 0);
+		ROMD   : out std_logic_vector(7 downto 0);
+		DCLK   : in std_logic;
+		-- CPU Bus
+		A      : in std_logic_vector(11 downto 0);
+		DI     : in std_logic_vector(7 downto 0);
+		CSE_x  : in std_logic;
+		WR_x   : in std_logic;
+		MCLK   : in std_logic;
+		-- Settings
+		PCGSW  : in std_logic;
+		MZMODE : in std_logic_vector(1 downto 0);
+		-- BackDoor for Sub-Processor
+		NCLK	 : in std_logic;								-- NiosII Clock
+		NA		 : in std_logic_vector(15 downto 0);	-- NiosII Address Bus
+		NCS_x  : in std_logic;								-- NiosII Memory Request
+		NWR_x	 : in std_logic;								-- NiosII Write Signal
+		NDI	 : in std_logic_vector(7 downto 0)		-- NiosII Data Bus(in)
 	);
 end component;
 
@@ -200,10 +217,28 @@ begin
 		q	 => CRAMDO
 	);
 
-	VCGROM0 : cgrom PORT MAP (
-		address	 => DCODE&VCOUNT(2 downto 0),
-		clock	 => CK8Mi,
-		q	 => CGDAT);
+	VPCG0 : pcg PORT MAP (
+		RST_x => RST,
+		-- CG-ROM I/F
+		ROMA => DCODE&VCOUNT(2 downto 0),
+		ROMD => CGDAT,
+		DCLK => CK8Mi,
+		-- CPU Bus
+		A => A,
+		DI => DI,
+		CSE_x => CSE_x,
+		WR_x => WR_x,
+		MCLK => CK2Mi,
+		-- Settings
+		PCGSW => PCGSW,
+		MZMODE => MZMODE,
+		-- BackDoor for Sub-Processor
+		NCLK => NCLK,								-- NiosII Clock
+		NA => NA,									-- NiosII Address Bus
+		NCS_x => NCS_x,							-- NiosII Memory Request
+		NWR_x => NWR_x,							-- NiosII Write Signal
+		NDI => NDI									-- NiosII Data Bus(in)
+	);
 
 	--
 	-- Clock Generator
