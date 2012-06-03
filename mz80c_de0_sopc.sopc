@@ -66,19 +66,6 @@
          type = "int";
       }
    }
-   element internal_sram_0.avalon_int_sram_slave
-   {
-      datum _lockedAddress
-      {
-         value = "1";
-         type = "boolean";
-      }
-      datum baseAddress
-      {
-         value = "2097152";
-         type = "long";
-      }
-   }
    element internal_sram8_0.avalon_int_sram_slave
    {
       datum baseAddress
@@ -95,6 +82,19 @@
          type = "long";
       }
    }
+   element internal_sram_0.avalon_int_sram_slave
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "2097152";
+         type = "long";
+      }
+   }
    element jtag_uart_0.avalon_jtag_slave
    {
       datum baseAddress
@@ -107,7 +107,7 @@
    {
       datum _sortIndex
       {
-         value = "18";
+         value = "19";
          type = "int";
       }
       datum megawizard_uipreferences
@@ -141,7 +141,7 @@
    {
       datum _sortIndex
       {
-         value = "15";
+         value = "16";
          type = "int";
       }
    }
@@ -149,7 +149,7 @@
    {
       datum _sortIndex
       {
-         value = "14";
+         value = "15";
          type = "int";
       }
    }
@@ -157,7 +157,7 @@
    {
       datum _sortIndex
       {
-         value = "16";
+         value = "17";
          type = "int";
       }
    }
@@ -180,6 +180,14 @@
    element mz80c_de0_sopc
    {
    }
+   element pio_0
+   {
+      datum _sortIndex
+      {
+         value = "14";
+         type = "int";
+      }
+   }
    element pio_1
    {
       datum _sortIndex
@@ -188,35 +196,11 @@
          type = "int";
       }
    }
-   element KBEN.s1
+   element pio_1.s1
    {
       datum baseAddress
       {
-         value = "144";
-         type = "long";
-      }
-   }
-   element SPI_CS.s1
-   {
-      datum baseAddress
-      {
-         value = "0";
-         type = "long";
-      }
-   }
-   element KBDATA.s1
-   {
-      datum baseAddress
-      {
-         value = "160";
-         type = "long";
-      }
-   }
-   element uart_0.s1
-   {
-      datum baseAddress
-      {
-         value = "192";
+         value = "16";
          type = "long";
       }
    }
@@ -236,11 +220,27 @@
          type = "long";
       }
    }
-   element pio_1.s1
+   element KBEN.s1
    {
       datum baseAddress
       {
-         value = "16";
+         value = "144";
+         type = "long";
+      }
+   }
+   element KBDATA.s1
+   {
+      datum baseAddress
+      {
+         value = "160";
+         type = "long";
+      }
+   }
+   element uart_0.s1
+   {
+      datum baseAddress
+      {
+         value = "192";
          type = "long";
       }
    }
@@ -273,6 +273,22 @@
          type = "long";
       }
    }
+   element pio_0.s1
+   {
+      datum baseAddress
+      {
+         value = "176";
+         type = "long";
+      }
+   }
+   element SPI_CS.s1
+   {
+      datum baseAddress
+      {
+         value = "0";
+         type = "long";
+      }
+   }
    element spi_0
    {
       datum _sortIndex
@@ -301,7 +317,7 @@
    {
       datum _sortIndex
       {
-         value = "17";
+         value = "18";
          type = "int";
       }
       datum megawizard_uipreferences
@@ -330,8 +346,8 @@
  <parameter name="maxAdditionalLatency" value="0" />
  <parameter name="projectName" value="mz80c_de0.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
- <parameter name="systemHash" value="-22965055358" />
- <parameter name="timeStamp" value="1336486709765" />
+ <parameter name="systemHash" value="-22209983240" />
+ <parameter name="timeStamp" value="1338693252156" />
  <module kind="clock_source" version="11.0" enabled="1" name="PCLK">
   <parameter name="clockFrequency" value="20000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -431,7 +447,7 @@
   <parameter name="dcache_numTCDM" value="_0" />
   <parameter name="dcache_lineSize" value="_32" />
   <parameter name="dcache_bursts" value="false" />
-  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='SPI_CS.s1' start='0x0' end='0x10' /><slave name='pio_1.s1' start='0x10' end='0x20' /><slave name='jtag_uart_0.avalon_jtag_slave' start='0x20' end='0x28' /><slave name='sysid.control_slave' start='0x28' end='0x30' /><slave name='Z80CTRL.s1' start='0x30' end='0x40' /><slave name='spi_0.spi_control_port' start='0x40' end='0x60' /><slave name='Z80STAT.s1' start='0x60' end='0x70' /><slave name='PAGE.s1' start='0x70' end='0x80' /><slave name='INT_BUTTON.s1' start='0x80' end='0x90' /><slave name='KBEN.s1' start='0x90' end='0xA0' /><slave name='KBDATA.s1' start='0xA0' end='0xB0' /><slave name='uart_0.s1' start='0xC0' end='0xE0' /><slave name='cpu_0.jtag_debug_module' start='0x800' end='0x1000' /><slave name='internal_sram8_0.avalon_int_sram_slave' start='0x10000' end='0x20000' /><slave name='internal_sram2_0.avalon_int_sram_slave' start='0x20000' end='0x40000' /><slave name='internal_sram_0.avalon_int_sram_slave' start='0x200000' end='0x300000' /><slave name='cfi_flash_0.s1' start='0x400000' end='0x800000' /></address-map>]]></parameter>
+  <parameter name="dataSlaveMapParam"><![CDATA[<address-map><slave name='SPI_CS.s1' start='0x0' end='0x10' /><slave name='pio_1.s1' start='0x10' end='0x20' /><slave name='jtag_uart_0.avalon_jtag_slave' start='0x20' end='0x28' /><slave name='sysid.control_slave' start='0x28' end='0x30' /><slave name='Z80CTRL.s1' start='0x30' end='0x40' /><slave name='spi_0.spi_control_port' start='0x40' end='0x60' /><slave name='Z80STAT.s1' start='0x60' end='0x70' /><slave name='PAGE.s1' start='0x70' end='0x80' /><slave name='INT_BUTTON.s1' start='0x80' end='0x90' /><slave name='KBEN.s1' start='0x90' end='0xA0' /><slave name='KBDATA.s1' start='0xA0' end='0xB0' /><slave name='pio_0.s1' start='0xB0' end='0xC0' /><slave name='uart_0.s1' start='0xC0' end='0xE0' /><slave name='cpu_0.jtag_debug_module' start='0x800' end='0x1000' /><slave name='internal_sram8_0.avalon_int_sram_slave' start='0x10000' end='0x20000' /><slave name='internal_sram2_0.avalon_int_sram_slave' start='0x20000' end='0x40000' /><slave name='internal_sram_0.avalon_int_sram_slave' start='0x200000' end='0x300000' /><slave name='cfi_flash_0.s1' start='0x400000' end='0x800000' /></address-map>]]></parameter>
   <parameter name="dataAddrWidth" value="23" />
   <parameter name="customInstSlavesSystemInfo" value="&lt;info/&gt;" />
   <parameter name="cpuReset" value="false" />
@@ -548,12 +564,16 @@
    kind="internal_sram2"
    version="1.0"
    enabled="1"
-   name="internal_sram2_0" />
+   name="internal_sram2_0">
+  <parameter name="AUTO_CLOCK_SINK_CLOCK_RATE" value="20000000" />
+ </module>
  <module
    kind="internal_sram8"
    version="1.0"
    enabled="1"
-   name="internal_sram8_0" />
+   name="internal_sram8_0">
+  <parameter name="AUTO_CLOCK_SINK_CLOCK_RATE" value="20000000" />
+ </module>
  <module kind="altera_avalon_pio" version="11.0" enabled="1" name="Z80CTRL">
   <parameter name="bitClearingEdgeCapReg" value="false" />
   <parameter name="bitModifyingOutReg" value="false" />
@@ -637,6 +657,20 @@
   <parameter name="simDoTestBenchWiring" value="false" />
   <parameter name="simDrivenValue" value="0" />
   <parameter name="width" value="8" />
+ </module>
+ <module kind="altera_avalon_pio" version="11.0" enabled="1" name="pio_0">
+  <parameter name="bitClearingEdgeCapReg" value="false" />
+  <parameter name="bitModifyingOutReg" value="false" />
+  <parameter name="captureEdge" value="false" />
+  <parameter name="clockRate" value="20000000" />
+  <parameter name="direction" value="Input" />
+  <parameter name="edgeType" value="RISING" />
+  <parameter name="generateIRQ" value="false" />
+  <parameter name="irqType" value="LEVEL" />
+  <parameter name="resetValue" value="0" />
+  <parameter name="simDoTestBenchWiring" value="false" />
+  <parameter name="simDrivenValue" value="0" />
+  <parameter name="width" value="10" />
  </module>
  <connection
    kind="avalon"
@@ -850,5 +884,10 @@
  </connection>
  <connection kind="interrupt" version="11.0" start="cpu_0.d_irq" end="KBEN.irq">
   <parameter name="irqNumber" value="4" />
+ </connection>
+ <connection kind="clock" version="11.0" start="PCLK.clk" end="pio_0.clk" />
+ <connection kind="avalon" version="11.0" start="cpu_0.data_master" end="pio_0.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00b0" />
  </connection>
 </system>

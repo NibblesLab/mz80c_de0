@@ -210,7 +210,7 @@ logic/T80/sram.vhd
 logic/T80/mrom.qip
 logic/greybox_tmp/*
 logic/T80/greybox_tmp/*
-*.ROM
 SP1002.hex
 font.hex
 software/mz80c_de0_soft/readme.txt
+backup/*

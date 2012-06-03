@@ -74,7 +74,7 @@ signal RFSH : std_logic;
 signal A16 : std_logic_vector(15 downto 0);
 signal DO : std_logic_vector(7 downto 0);
 signal DI : std_logic_vector(7 downto 0);
-signal ROMDO : std_logic_vector(7 downto 0);
+--signal ROMDO : std_logic_vector(7 downto 0);
 signal MEMDO : std_logic_vector(15 downto 0);
 signal BAK : std_logic;
 --
@@ -231,15 +231,6 @@ component i8253
 	);
 end component;
 
-component mrom
-	PORT
-	(
-		address	: IN STD_LOGIC_VECTOR (11 DOWNTO 0);
-		clock		: IN STD_LOGIC  := '1';
-		q			: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
-	);
-end component;
-
 component videoout is
     Port (
 		RST    : in std_logic;		-- Reset
@@ -386,12 +377,6 @@ begin
 		OUT2 => INTX
 	);
 
-	ROM0 : mrom port map (
-		address	=> A16(11 downto 0),
-		clock		=> CK2M,
-		q			=> ROMDO
-	);
-
 	VIDEO0 : videoout Port map (
 		RST => RST_x,				-- Reset
 		MZMODE => MZMODE,			-- Hardware Mode
@@ -467,7 +452,7 @@ begin
 			DOPIT when CSE1_x='0' else
 			DO367 when CSE2_x='0' else
 			VRAMDO when CSD_x='0' else
-			ROMDO when CSMROM='0' else
+			--ROMDO when CSMROM='0' else
 			RAMDI when CSRAM='0' else (others=>'0');
 
 	--
@@ -479,8 +464,8 @@ begin
 	CSE2_x<='0' when CSE_x='0' and A16(4 downto 2)="010" and ((A16(11) or A16(10) or A16(9)) and MZMODE(1))='0' else '1';
 	--CSE3_x<='0' when CSE_x='0' and A16(4 downto 2)="011" and ((A16(11) or A16(10) or A16(9)) and MZMODE(1))='0' else '1';
 	CSD_x<='0' when A16(15 downto 12)="1101" and MREQ='0' else '1';
-	CSMROM<='0' when A16(15 downto 12)="0000" and MREQ='0' else '1';
-	CSRAM<='0' when (( A16(15)='0' and A16(14 downto 12)/="000" ) or A16(15 downto 14)="10" or A16(15 downto 12)="1100" ) and MREQ='0' else '1';
+	--CSMROM<='0' when A16(15 downto 12)="0000" and MREQ='0' else '1';
+	CSRAM<='0' when ( A16(15)='0' or A16(15 downto 14)="10" or A16(15 downto 12)="1100" or A16(15 downto 12)="1111" or (A16(15 downto 11)="11101" and MZMODE(1)='1') ) and MREQ='0' else '1';
 
 	--
 	-- Video Output
@@ -499,7 +484,7 @@ begin
 	BACK<=BAK;
 	RAMDO<=DO;
 	RAMCS_x<=CSRAM;
-	MWR_x<=MWR;
+	MWR_x<='1' when A16(15 downto 12)="0000" or A16(15 downto 12)="1111" or A16(15 downto 11)="11101" else MWR;
 
 	--
 	-- Misc

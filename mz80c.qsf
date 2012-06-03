@@ -578,7 +578,6 @@ set_global_assignment -name VHDL_FILE logic/T80/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE logic/T80/T80_ALU.vhd
 set_global_assignment -name VHDL_FILE logic/T80/T80.vhd
 set_global_assignment -name VHDL_FILE logic/T80/T80s.vhd
-set_global_assignment -name QIP_FILE logic/mrom.qip
 set_global_assignment -name VHDL_FILE logic/i8255.vhd
 set_global_assignment -name VHDL_FILE logic/keymatrix.vhd
 set_global_assignment -name QIP_FILE logic/dpram1kr.qip

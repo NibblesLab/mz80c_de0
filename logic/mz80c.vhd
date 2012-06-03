@@ -271,6 +271,9 @@ component mz80c_de0_sopc
 		signal WE_to_the_internal_sram_0 : OUT STD_LOGIC;
 		signal WREQ_from_the_internal_sram_0 : IN STD_LOGIC;
 
+		-- the_pio_0
+		signal in_port_to_the_pio_0 : IN STD_LOGIC_VECTOR (9 DOWNTO 0);
+
 		-- the_pio_1
 		signal out_port_from_the_pio_1 : OUT STD_LOGIC_VECTOR (9 DOWNTO 0);
 
@@ -488,6 +491,8 @@ begin
 		DEN_to_the_internal_sram_0 		=> NBEN,
 		WE_to_the_internal_sram_0 			=> NWE,
 		WREQ_from_the_internal_sram_0 	=> NWRQ,
+		-- the_pio_0
+		in_port_to_the_pio_0 => SW,
 		-- the_pio_1
 		out_port_from_the_pio_1 => T_LEDG,
 		-- the_spi_0

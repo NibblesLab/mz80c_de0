@@ -10,5 +10,7 @@
 #define FILE_H_
 
 void direct_load(void);
+void GetPrivateProfileString(char *, char *, char *, char *, const char *);
+DWORD GetPrivateProfileInt(char *, char *, DWORD, const char *);
 
 #endif /* FILE_H_ */
