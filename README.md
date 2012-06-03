@@ -9,6 +9,7 @@ Requirements
 --------------------
 * Altera(Terasic) DE0 board
 * Quartus II (I use 11.0 sp1)
+* SD, SDHC or MMC card
 
 How to reproduction project
 ----------------------------------------
@@ -61,6 +62,8 @@ How to reproduction project
 * At Project Explorer, expand mz80c\_de0\_soft, then right-click and select Refresh(F5).
 * Build project. Project->Build All
 * Program to DE0 board with mz80c\_de0\_soft.elf.
+* Put the files in CARD folder to SD/MMC card.
+* Set card to slot, SW5 is ON(upper), then push power-switch off-on.
 
 Special thanks to ...
 -----------------------------
