@@ -115,7 +115,7 @@ void MZ_disp(unsigned int x, unsigned int y, unsigned char ch)
 /*
  * Display Message(until NULL) to MZ screen
  */
-void MZ_msg(unsigned int x, unsigned int y, unsigned char *msg)
+void MZ_msg(unsigned int x, unsigned int y, char *msg)
 {
 	while((*msg)!=0){
 		MZ_disp(x,y,*msg);

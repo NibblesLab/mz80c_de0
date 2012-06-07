@@ -26,7 +26,7 @@ extern volatile z80_t z80_status;
 FATFS fs;
 DIR dirs;
 FILINFO finfo;
-unsigned char fname[13];
+char fname[13];
 
 void ROM_read(char *buffer, char *data)
 {
@@ -44,7 +44,9 @@ void ROM_read(char *buffer, char *data)
 void System_Initialize(void)
 {
 	char SecName[8],buffer[512],data[4096];
+	unsigned char *monrom,*fdrom,*cgrom,*keymap;
 	UINT i;
+	ROMS_t *romdata=(ROMS_t *)(CFI_FLASH_0_BASE+0x100000);
 
 	// Interrupt regist
 	button_int_regist();
@@ -53,6 +55,40 @@ void System_Initialize(void)
 	f_mount(0,&fs);
 
 	IOWR_ALTERA_AVALON_PIO_DATA(PAGE_BASE,0);	// Set Page
+	// Extended ROM
+	for(i=0;i<2048;i++){	// $E800-$EFFF
+		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+0xe800))[i*2]=romdata->ex[i];
+	}
+	switch(IORD_ALTERA_AVALON_PIO_DATA(PIO_0_BASE)&0x300){
+	case 0x000:
+	case 0x100:
+	case 0x200:
+		monrom=romdata->mon80c;
+		fdrom=romdata->fd80c;
+		cgrom=romdata->char80c;
+		keymap=romdata->key80c;
+		break;
+	default:
+		monrom=romdata->mon80a;
+		fdrom=romdata->fd80a;
+		cgrom=romdata->char80a;
+		keymap=romdata->key80a;
+		break;
+	}
+	// Monitor, FD I/F ROM
+	for(i=0;i<4096;i++){	// $0000-$0FFF
+		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE))[i*2]=monrom[i];
+		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+0xf000))[i*2]=fdrom[i];
+	}
+	// CG ROM
+	for(i=0;i<2048;i++){	// (0xc800-0xcfff)
+		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xc800))[i]=cgrom[i];
+	}
+	// Key Map Data
+	for(i=0;i<256;i++){	// (0xc000-0xc0ff)
+		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xc000))[i]=keymap[i];
+	}
+
 	if(IORD_ALTERA_AVALON_PIO_DATA(PIO_0_BASE)&0x20){
 		// Select Section Name by MZ mode
 		switch(IORD_ALTERA_AVALON_PIO_DATA(PIO_0_BASE)&0x300){
@@ -146,8 +182,35 @@ int main()
 		do {
 			k=menu(0,0,0);	// Root menu
 			switch(k){
+			case 0:
+				if(view_inventory()==999) continue;
+				break;
 			case 3:
 				direct_load();
+				break;
+			case 40:
+			case 41:
+			case 42:
+			case 43:
+			case 44:
+			case 45:
+			case 46:
+			case 47:
+			case 48:
+				set_rom(k);
+				if(view_inventory()==999) continue;
+				break;
+			case 50:
+			case 51:
+			case 52:
+			case 53:
+			case 54:
+			case 55:
+			case 56:
+			case 57:
+			case 58:
+				clear_rom(k);
+				if(view_inventory()==999) continue;
 			default:
 				break;
 			}

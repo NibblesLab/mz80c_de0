@@ -18,7 +18,7 @@ void MZ_release(void);
 void MZ_Brequest(void);
 void MZ_Brelease(void);
 void MZ_disp(unsigned int, unsigned int, unsigned char);
-void MZ_msg(unsigned int, unsigned int, unsigned char *);
+void MZ_msg(unsigned int, unsigned int, char *);
 void crev(unsigned int, unsigned int, unsigned int, unsigned int);
 
 #endif /* MZCTRL_H_ */

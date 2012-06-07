@@ -10,6 +10,8 @@
 #define FILE_H_
 
 void direct_load(void);
+void set_rom(int);
+void clear_rom(int);
 void GetPrivateProfileString(char *, char *, char *, char *, const char *);
 DWORD GetPrivateProfileInt(char *, char *, DWORD, const char *);
 

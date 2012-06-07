@@ -10,7 +10,7 @@
 #define MENU_H_
 
 typedef struct {
-	unsigned char *item;
+	char *item;
 	unsigned int *next;
 	unsigned int items;
 } menu_t;
@@ -19,5 +19,6 @@ void frame(unsigned int, unsigned int, unsigned int);
 void disp_menu(unsigned int, unsigned int);
 int select_menu(unsigned int, unsigned int);
 int menu(unsigned int, unsigned int, unsigned int);
+int view_inventory(void);
 
 #endif /* MENU_H_ */

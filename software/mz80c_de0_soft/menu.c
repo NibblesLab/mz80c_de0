@@ -21,27 +21,31 @@
 extern volatile z80_t z80_status;
 
 // Menu members
-static unsigned char main_menu_item[]="    VIEW    \0 SET MEDIA >\0 REL MEDIA >\0 DIR. LOAD >\0    ROMS   >";
-static unsigned int main_menu_next[6]={0,1,2,99,3,0};
+static char main_menu_item[]="    VIEW    \0 SET MEDIA >\0 REL MEDIA >\0 DIR. LOAD >\0 SET ROMS  >\0 REL ROMS  >";
+static unsigned int main_menu_next[6]={0,1,2,99,3,4};
 
-static unsigned char rel_media_item[]="    TAPE    \0    FDD 1   \0    FDD 2   ";
+static char rel_media_item[]="    TAPE    \0    FDD 1   \0    FDD 2   ";
 static unsigned int rel_media_next[6]={0,0,0,0,0,0};
 
-static unsigned char set_media_item[]="    TAPE   >\0    FDD 1  >\0    FDD 2  >";
+static char set_media_item[]="    TAPE   >\0    FDD 1  >\0    FDD 2  >";
 static unsigned int set_media_next[6]={99,99,99,0,0,0};
 
-static unsigned char rom_item[]="    MON    >\0  MON(80A) >\0  EX.ROM   >\0  FD ROM   >\0  CG ROM   >\0CG ROM(80A)>";
-static unsigned int rom_next[6]={99,99,99,99,99,99};
+static char set_rom_item[]="    MON    >\0  MON(80A) >\0  EX.ROM   >\0  FD ROM   >\0FD ROM(80A)>\0  CG ROM   >\0CG ROM(80A)>\0  KEYMAP   >\0KEYMAP(80A)>";
+static unsigned int set_rom_next[9]={99,99,99,99,99,99,99,99,99};
 
-menu_t menus[4]={{main_menu_item,main_menu_next,5},
+static char rel_rom_item[]="    MON     \0  MON(80A)  \0  EX.ROM    \0  FD ROM    \0FD ROM(80A) \0  CG ROM    \0CG ROM(80A) \0  KEYMAP    \0KEYMAP(80A) ";
+static unsigned int rel_rom_next[9]={0,0,0,0,0,0,0,0,0};
+
+menu_t menus[5]={{main_menu_item,main_menu_next,6},
 				 {set_media_item,set_media_next,3},
 				 {rel_media_item,rel_media_next,3},
-				 {rom_item,rom_next,6      }};
+				 {set_rom_item,set_rom_next,9      },
+				 {rel_rom_item,rel_rom_next,9      }};
 
 extern FATFS fs;
 extern DIR dirs;
 extern FILINFO finfo;
-extern unsigned char fname[13];
+extern char fname[13];
 
 /*
  * Display Frame by Item numbers
@@ -134,7 +138,7 @@ int select_menu(unsigned int level, unsigned int n_menu)
 void disp_files(unsigned int level, unsigned char *items, unsigned int total)
 {
 	int i,j,k;
-	unsigned char fname[13];
+	char fname[13];
 
 	fname[12]='\0';
 	for(i=0;i<(total>23?23:total);i++){
@@ -307,6 +311,87 @@ int menu(unsigned int level, unsigned int n_menu, unsigned int select)
 					return(s*10+ss);
 				}
 			}
+		}
+	}
+}
+
+/*
+ * View the Inventory of ROMs
+ */
+int view_inventory(void)
+{
+	unsigned int i,j;
+	ROMS_t *romdata=(ROMS_t *)(CFI_FLASH_0_BASE+0x100000);
+	char name[13];
+
+	for(i=1;i<=24;i++){
+		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i*40+13]=0x79;
+		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i*40+39]=0x79;
+	}
+	for(i=14;i<=38;i++){
+		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i]=0x78;
+		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[960+i]=0x78;
+	}
+
+	for(i=1;i<=23;i++){
+		for(j=14;j<=38;j++){
+			((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i*40+j]=0;
+		}
+	}
+
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[13]=0x4b;
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[39]=0x4c;
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[999]=0x6e;
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[973]=0x6f;
+
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[53]=0x5e;
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[52]=0x78;
+
+	name[12]='\0';
+	MZ_msg(14, 1, "MZ-80C ON FPGA B.U.SYSTEM");
+	MZ_msg(14, 2, " BY NIBBLESLAB VER."); MZ_msg(33, 2, version);
+	MZ_msg(14, 5, "FOR MZ-80K/K2/K2E/C/1200;");
+	MZ_msg(14, 7, "MONITOR ROM :");
+		memcpy(name,romdata->mon80c_name,12);
+		MZ_msg(27, 7, name);
+	MZ_msg(14, 8, "FD ROM      :");
+		memcpy(name,romdata->fd80c_name,12);
+		MZ_msg(27, 8, name);
+	MZ_msg(14, 9, "CG ROM      :");
+		memcpy(name,romdata->char80c_name,12);
+		MZ_msg(27, 9, name);
+	MZ_msg(14, 10, "KEY MAP     :");
+		memcpy(name,romdata->key80c_name,12);
+		MZ_msg(27, 10, name);
+	MZ_msg(14, 12, "FOR MZ-1200/80A;");
+	MZ_msg(14, 14, "USER ROM    :");
+		memcpy(name,romdata->ex_name,12);
+		MZ_msg(27, 14, name);
+	MZ_msg(14, 16, "FOR MZ-80A;");
+	MZ_msg(14, 18, "MONITOR ROM :");
+		memcpy(name,romdata->mon80a_name,12);
+		MZ_msg(27, 18, name);
+	MZ_msg(14, 19, "FD ROM      :");
+		memcpy(name,romdata->fd80a_name,12);
+		MZ_msg(27, 19, name);
+	MZ_msg(14, 20, "CG ROM      :");
+		memcpy(name,romdata->char80a_name,12);
+		MZ_msg(27, 20, name);
+	MZ_msg(14, 21, "KEY MAP     :");
+		memcpy(name,romdata->key80a_name,12);
+		MZ_msg(27, 21, name);
+
+	while(1){
+		if(z80_status.status==0) return(-1);
+		switch(get_key()){
+		case 0x1b:	// escape menu
+			z80_status.status=0;
+			break;
+		case 0x1d:	// menu back
+			return(999);
+			break;
+		default:
+			break;
 		}
 	}
 }
