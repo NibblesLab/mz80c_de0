@@ -501,6 +501,7 @@ begin
 
 	LEDG(9 downto 3)<=(others=>'0');
 	LEDG(2)<=GPIO1_D(0);
-	LEDG(1 downto 0)<="10" when EIKANA='1' else "01";
+	LEDG(1 downto 0)<="00" when MZMODE(1)='1' else
+							"10" when EIKANA='1' else "01";
 
 end rtl;
