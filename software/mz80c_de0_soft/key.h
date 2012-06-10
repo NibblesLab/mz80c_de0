@@ -21,5 +21,6 @@ typedef struct {
 
 void key_int_regist(void);
 unsigned char get_key(void);
+void keybuf_clear(void);
 
 #endif /* KEY_H_ */

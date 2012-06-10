@@ -36,8 +36,10 @@ entity mz80_core is
 		NDO			: out std_logic_vector(7 downto 0);		-- NiosII Data Bus(out)
 		-- Clock Input	 
 		CLOCK_50		: in std_logic;								--	50 MHz
-		-- Push Button
-		BUTTON		: in std_logic;								--	Pushbutton[2]
+		-- Tape Signals
+		SENSE			: in std_logic;								--	Pushbutton[2]
+		MOTOR			: out std_logic;								-- Motor On
+		RBIT			: in std_logic;								--	Read Data
 		-- DPDT Switch
 		SW				: in std_logic_vector(5 downto 0);		--	Toggle Switch[5:0]
 		-- LED
@@ -126,8 +128,6 @@ signal VRAMDO : std_logic_vector(7 downto 0);
 --
 signal CSE0_x : std_logic;
 signal DOPPI : std_logic_vector(7 downto 0);
---signal RBIT : std_logic;
-signal MOTOR : std_logic;
 signal EIKANA : std_logic;
 --
 -- PIT
@@ -342,8 +342,8 @@ begin
 		VBLNK => VBLNK,							-- V-BLANK signal
 		EIKANA => EIKANA,							-- EISUU/KANA LED
 		VGATE => VGATE,							-- Video Outpu Enable
-		RBIT => GPIO1_D(0),						-- Read Tape Bit
-		SENSE => SW(0),							-- Tape Rotation Sense
+		RBIT => RBIT,								-- Read Tape Bit
+		SENSE => SENSE,							-- Tape Rotation Sense
 		MOTOR => MOTOR,							-- CMT Motor ON
 		-- for Debug
 		LDDAT => LDDAT,

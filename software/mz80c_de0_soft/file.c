@@ -7,6 +7,7 @@
  */
 
 #include "system.h"
+#include "io.h"
 #include "alt_types.h"
 #include <stdio.h>
 #include <string.h>
@@ -20,12 +21,12 @@
 extern FATFS fs;
 extern DIR dirs;
 extern FILINFO finfo;
-extern char fname[13];
+extern char fname[13],tname[13];
 
 /*
  * Read File (bulk)
  */
-FRESULT file_bulk_read(unsigned char *buf, UINT size)
+UINT file_bulk_read(unsigned char *buf, UINT size)
 {
 	FIL fobj;
 	FRESULT res;
@@ -33,9 +34,9 @@ FRESULT file_bulk_read(unsigned char *buf, UINT size)
 
 	// File Read
 	res=f_open(&fobj, (TCHAR*)fname, FA_OPEN_EXISTING | FA_READ);
-	if(res!=FR_OK) return(res);
+	if(res!=FR_OK) return(0);
 	res=f_read(&fobj, buf, size, &r);
-	return(f_close(&fobj));
+	return(r);
 }
 
 /*
@@ -43,12 +44,11 @@ FRESULT file_bulk_read(unsigned char *buf, UINT size)
  */
 void direct_load(void)
 {
-	FRESULT res;
-	UINT i,size,dtadr;
+	UINT i,r,size,dtadr;
 	unsigned char buf[65536];
 
 	// File Read
-	res=file_bulk_read(buf, 65536);
+	r=file_bulk_read(buf, 65536);
 
 	IOWR_ALTERA_AVALON_PIO_DATA(PAGE_BASE,0);	// Set Page
 	for(i=0;i<128;i++){	// Information
@@ -65,12 +65,12 @@ void direct_load(void)
  * ROM data setting
  */
 void set_rom(int select){
-	FRESULT res;
 	alt_flash_fd *fd;
 	ROMS_t romdata;
 	int i;
 	unsigned char *buf;
 	char *name;
+	UINT r;
 
 	for(i=0;i<sizeof(ROMS_t);i++)
 		((char *)&romdata)[i]=((char *)(CFI_FLASH_0_BASE+0x100000))[i];
@@ -117,7 +117,7 @@ void set_rom(int select){
 	}
 
 	// File Read
-	res=file_bulk_read(buf, 4096);
+	r=file_bulk_read(buf, 4096);
 	strcpy(name, fname);
 
 	fd=alt_flash_open_dev(CFI_FLASH_0_NAME);
@@ -318,3 +318,82 @@ DWORD GetPrivateProfileInt(
 	}
 }
 
+void put_tape_formatting_pulse(void)
+{
+	int tpos,sum,size,p,q,step;
+	DWORD fsize;
+	unsigned char tdata[128],c;
+	UINT r;
+	FIL fobj;
+	FRESULT res;
+
+	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(INT_BUTTON_BASE,0);	// Disable IRQ
+
+	if(tname[0]!='\0'){
+		res=f_open(&fobj, tname, FA_OPEN_EXISTING | FA_READ);
+		if(res==FR_OK){
+			fsize=fobj.fsize;
+			IOWR_ALTERA_AVALON_PIO_DATA(NUM_BASE, fsize);
+			while(1){
+				res=f_read(&fobj, tdata, 128, &r);
+				if(r==0) break;
+				if(z11000()<0) break;
+				if(z11000()<0) break;
+				if(o20()<0) break;
+				if(o20()<0) break;
+				if(z20()<0) break;
+				if(z20()<0) break;
+				if(pulseout(0x80,1)<0) break;
+				tpos=0;
+				sum=0;
+				for(p=0;p<128;p++){
+					q=pulseout(0x80,1);
+					if(q<0) break;
+					c=tdata[tpos++];
+					q=pulseout(c,8);
+					if(q<0) break;
+					sum+=q;
+					fsize--;
+					IOWR_ALTERA_AVALON_PIO_DATA(NUM_BASE, fsize);
+				}
+				if(q<0) break;
+				if(sumout(sum)<0) break;
+				if(z11000()<0) break;
+				if(o20()<0) break;
+				if(z20()<0) break;
+				if(pulseout(0x80,1)<0) break;
+				sum=0;
+				size=(tdata[19]<<8)+tdata[18];
+				while(1){
+					if(size<128) step=size; else step=128;
+					res=f_read(&fobj, tdata, step, &r);
+					tpos=0;
+					for(p=0;p<r;p++){
+						q=pulseout(0x80,1);
+						if(q<0) break;
+						c=tdata[tpos++];
+						q=pulseout(c,8);
+						if(q<0) break;
+						sum+=q;
+						fsize--;
+						IOWR_ALTERA_AVALON_PIO_DATA(NUM_BASE, fsize);
+					}
+					if(q<0) break;
+					if(size>128) size-=128; else break;
+				}
+				if(q<0) break;
+				if(sumout(sum)<0) break;
+			}
+			if(f_eof(&fobj)){
+				tname[0]='\0';	// Release Tape Data
+				IOWR(CMT_0_BASE, 1, 0);
+			}
+		}
+		res=f_close(&fobj);
+	}else{
+		while((IORD(CMT_0_BASE, 0)&0x80)!=0);	// Wait for Stop
+	}
+
+	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(INT_BUTTON_BASE,0xf);	// Enable IRQ
+
+}

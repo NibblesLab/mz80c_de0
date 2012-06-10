@@ -30,10 +30,10 @@ static unsigned int rel_media_next[6]={0,0,0,0,0,0};
 static char set_media_item[]="    TAPE   >\0    FDD 1  >\0    FDD 2  >";
 static unsigned int set_media_next[6]={99,99,99,0,0,0};
 
-static char set_rom_item[]="    MON    >\0  MON(80A) >\0  EX.ROM   >\0  FD ROM   >\0FD ROM(80A)>\0  CG ROM   >\0CG ROM(80A)>\0  KEYMAP   >\0KEYMAP(80A)>";
+static char set_rom_item[]="    MON    >\0  MON(80A) >\0  USER ROM >\0  FD ROM   >\0FD ROM(80A)>\0  CG ROM   >\0CG ROM(80A)>\0  KEYMAP   >\0KEYMAP(80A)>";
 static unsigned int set_rom_next[9]={99,99,99,99,99,99,99,99,99};
 
-static char rel_rom_item[]="    MON     \0  MON(80A)  \0  EX.ROM    \0  FD ROM    \0FD ROM(80A) \0  CG ROM    \0CG ROM(80A) \0  KEYMAP    \0KEYMAP(80A) ";
+static char rel_rom_item[]="    MON     \0  MON(80A)  \0  USER ROM  \0  FD ROM    \0FD ROM(80A) \0  CG ROM    \0CG ROM(80A) \0  KEYMAP    \0KEYMAP(80A) ";
 static unsigned int rel_rom_next[9]={0,0,0,0,0,0,0,0,0};
 
 menu_t menus[5]={{main_menu_item,main_menu_next,6},
@@ -45,7 +45,7 @@ menu_t menus[5]={{main_menu_item,main_menu_next,6},
 extern FATFS fs;
 extern DIR dirs;
 extern FILINFO finfo;
-extern char fname[13];
+extern char fname[13],tname[13];	//,dname1[13],dname2[13];
 
 /*
  * Display Frame by Item numbers
@@ -158,6 +158,7 @@ void disp_files(unsigned int level, unsigned char *items, unsigned int total)
 				fname[j]=' ';
 			}
 		}
+		MZ_msg(level*13+1, 1+i, "            ");
 		MZ_msg(level*13+1, 1+i, fname);
 	}
 }
@@ -322,7 +323,6 @@ int view_inventory(void)
 {
 	unsigned int i,j;
 	ROMS_t *romdata=(ROMS_t *)(CFI_FLASH_0_BASE+0x100000);
-	char name[13];
 
 	for(i=1;i<=24;i++){
 		((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i*40+13]=0x79;
@@ -347,39 +347,26 @@ int view_inventory(void)
 	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[53]=0x5e;
 	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[52]=0x78;
 
-	name[12]='\0';
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[212]=0x57;
+	((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[252]=0x57;
+
 	MZ_msg(14, 1, "MZ-80C ON FPGA B.U.SYSTEM");
 	MZ_msg(14, 2, " BY NIBBLESLAB VER."); MZ_msg(33, 2, version);
-	MZ_msg(14, 5, "FOR MZ-80K/K2/K2E/C/1200;");
-	MZ_msg(14, 7, "MONITOR ROM :");
-		memcpy(name,romdata->mon80c_name,12);
-		MZ_msg(27, 7, name);
-	MZ_msg(14, 8, "FD ROM      :");
-		memcpy(name,romdata->fd80c_name,12);
-		MZ_msg(27, 8, name);
-	MZ_msg(14, 9, "CG ROM      :");
-		memcpy(name,romdata->char80c_name,12);
-		MZ_msg(27, 9, name);
-	MZ_msg(14, 10, "KEY MAP     :");
-		memcpy(name,romdata->key80c_name,12);
-		MZ_msg(27, 10, name);
-	MZ_msg(14, 12, "FOR MZ-1200/80A;");
-	MZ_msg(14, 14, "USER ROM    :");
-		memcpy(name,romdata->ex_name,12);
-		MZ_msg(27, 14, name);
-	MZ_msg(14, 16, "FOR MZ-80A;");
-	MZ_msg(14, 18, "MONITOR ROM :");
-		memcpy(name,romdata->mon80a_name,12);
-		MZ_msg(27, 18, name);
-	MZ_msg(14, 19, "FD ROM      :");
-		memcpy(name,romdata->fd80a_name,12);
-		MZ_msg(27, 19, name);
-	MZ_msg(14, 20, "CG ROM      :");
-		memcpy(name,romdata->char80a_name,12);
-		MZ_msg(27, 20, name);
-	MZ_msg(14, 21, "KEY MAP     :");
-		memcpy(name,romdata->key80a_name,12);
-		MZ_msg(27, 21, name);
+	MZ_msg(14, 4, "    TAPE    :"); MZ_msg(27, 4, tname);
+	MZ_msg(14, 5, "    FDD 1   :"); //MZ_msg(27, 5, dname1);
+	MZ_msg(14, 6, "    FDD 2   :"); //MZ_msg(27, 6, dname2);
+	MZ_msg(14, 8, "FOR MZ-80K/K2/K2E/C/1200;");
+	MZ_msg(14, 9, "MONITOR ROM :"); MZ_msgx(27, 9, romdata->mon80c_name, 12);
+	MZ_msg(14, 10, "FD ROM      :"); MZ_msgx(27, 10, romdata->fd80c_name, 12);
+	MZ_msg(14, 11, "CG ROM      :"); MZ_msgx(27, 11, romdata->char80c_name, 12);
+	MZ_msg(14, 12, "KEY MAP     :"); MZ_msgx(27, 12, romdata->key80c_name, 12);
+	MZ_msg(14, 14, "FOR MZ-1200/80A;");
+	MZ_msg(14, 15, "USER ROM    :"); MZ_msgx(27, 15, romdata->ex_name, 12);
+	MZ_msg(14, 17, "FOR MZ-80A;");
+	MZ_msg(14, 18, "MONITOR ROM :"); MZ_msgx(27, 18, romdata->mon80a_name, 12);
+	MZ_msg(14, 19, "FD ROM      :"); MZ_msgx(27, 19, romdata->fd80a_name, 12);
+	MZ_msg(14, 20, "CG ROM      :"); MZ_msgx(27, 20, romdata->char80a_name, 12);
+	MZ_msg(14, 21, "KEY MAP     :"); MZ_msgx(27, 21, romdata->key80a_name, 12);
 
 	while(1){
 		if(z80_status.status==0) return(-1);

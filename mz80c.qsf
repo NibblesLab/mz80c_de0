@@ -596,6 +596,7 @@ set_global_assignment -name VHDL_FILE logic/ScanConv.vhd
 set_global_assignment -name QIP_FILE logic/linebuf.qip
 set_global_assignment -name VHDL_FILE logic/ls367.vhd
 set_global_assignment -name QIP_FILE mz80c_de0_sopc.qip
+set_global_assignment -name VHDL_FILE logic/cmt.vhd
 set_global_assignment -name VHDL_FILE logic/sdram.vhd
 set_global_assignment -name QIP_FILE logic/pll100.qip
 set_global_assignment -name VHDL_FILE logic/seg7.vhd

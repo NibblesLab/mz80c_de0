@@ -7,6 +7,7 @@
  */
 
 #include "system.h"
+#include "io.h"
 #include <stdio.h>
 #include <string.h>
 #include "unistd.h"
@@ -17,8 +18,8 @@
 #include "mzctrl.h"
 #include "key.h"
 #include "menu.h"
-#include "file.h"
 #include "ff.h"
+#include "file.h"
 
 extern volatile z80_t z80_status;
 
@@ -26,7 +27,7 @@ extern volatile z80_t z80_status;
 FATFS fs;
 DIR dirs;
 FILINFO finfo;
-char fname[13];
+char fname[13],tname[13];	//,dname1[13],dname2[13];
 
 void ROM_read(char *buffer, char *data)
 {
@@ -53,6 +54,7 @@ void System_Initialize(void)
 	key_int_regist();
 
 	f_mount(0,&fs);
+	tname[0]='\0';	// dname1[0]='\0'; dname2[0]='\0';
 
 	IOWR_ALTERA_AVALON_PIO_DATA(PAGE_BASE,0);	// Set Page
 	// Extended ROM
@@ -163,8 +165,8 @@ void System_Initialize(void)
 
 int main()
 {
-	//unsigned int x,y;
 	int k;
+	//UINT r;
 
 	// Initialize Disk I/F and ROM
 	System_Initialize();
@@ -175,7 +177,10 @@ int main()
 	/* Event loop never exits. */
 	while (1){
 		// Wait MENU Button
-		while(z80_status.status==0);
+		while(z80_status.status==0){
+			if((IORD(CMT_0_BASE, 0)&0x80)!=0)	// Is Play Button ON ?
+				put_tape_formatting_pulse();
+		}
 
 		// Z80-Bus request
 		MZ_Brequest();
@@ -187,6 +192,20 @@ int main()
 				break;
 			case 3:
 				direct_load();
+				break;
+			case 10:
+				strcpy(tname, fname);
+				IOWR(CMT_0_BASE, 1, 1);
+				break;
+			case 20:
+				tname[0]='\0';
+				IOWR(CMT_0_BASE, 1, 0);
+				break;
+			case 21:
+				//dname1[0]='\0';
+				break;
+			case 22:
+				//dname2[0]='\0';
 				break;
 			case 40:
 			case 41:
@@ -216,6 +235,7 @@ int main()
 			}
 			break;
 		}while(1);
+		keybuf_clear();
 		z80_status.status=0;
 
 		// Z80-Bus release

@@ -7,6 +7,7 @@
  */
 
 #include "system.h"
+#include "io.h"
 #include "alt_types.h"
 #include <stdio.h>
 #include "altera_avalon_pio_regs.h"
@@ -129,6 +130,22 @@ void MZ_msg(unsigned int x, unsigned int y, char *msg)
 }
 
 /*
+ * Display Message(for numbers) to MZ screen
+ */
+void MZ_msgx(unsigned int x, unsigned int y, char *msg, unsigned int num)
+{
+	while((num--)!=0){
+		MZ_disp(x,y,*msg);
+		x++;
+		if(x>=40){
+			y++;
+			x=0;
+		}
+		msg++;
+	}
+}
+
+/*
  * Reverse Display in Rectangle Area
  */
 void crev(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2)
@@ -144,3 +161,63 @@ void crev(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2)
 	}
 }
 
+/*
+ * Sharp PWM Pulse Generate
+ */
+int pulseout(unsigned char c, int num)
+{
+	int sum=0,stat;
+
+	while(num>0){
+		do{
+			stat=IORD(CMT_0_BASE, 0);
+			if((stat&0x80)==0) return -1;	// tape stop
+		}while(stat&0x01);					// still output
+		IOWR(CMT_0_BASE, 0, c);		// output 1 pulse
+		if(c&0x80) sum++;
+		c=c<<1;
+		num--;
+	}
+	return sum;
+}
+
+// short 11000bit
+int z11000(void)
+{
+	int p;
+
+	for(p=0;p<1375;p++)	// 11000bit
+		if(pulseout(0,8)<0) return -1;
+	return 0;
+}
+
+// short 20bit
+int z20(void)
+{
+	int p;
+
+	for(p=0;p<4;p++)	// 20bit
+		if(pulseout(0,5)<0) return -1;
+	return 0;
+}
+
+// long 20bit
+int o20(void)
+{
+	int p;
+
+	for(p=0;p<4;p++)	// 20bit
+		if(pulseout(0xff,5)<0) return -1;
+	return 0;
+}
+
+// output checksum
+int sumout(unsigned int sum)
+{
+	if(pulseout(0x80,1)<0) return -1;
+	if(pulseout((sum>>8)&0xff,8)<0) return -1;
+	if(pulseout(0x80,1)<0) return -1;
+	if(pulseout(sum&0xff,8)<0) return -1;
+	if(pulseout(0x80,1)<0) return -1;
+	return 0;
+}

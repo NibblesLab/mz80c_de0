@@ -19,6 +19,12 @@ void MZ_Brequest(void);
 void MZ_Brelease(void);
 void MZ_disp(unsigned int, unsigned int, unsigned char);
 void MZ_msg(unsigned int, unsigned int, char *);
+void MZ_msgx(unsigned int, unsigned int, char *, unsigned int);
 void crev(unsigned int, unsigned int, unsigned int, unsigned int);
+int pulseout(unsigned char, int);
+int z11000(void);
+int z20(void);
+int o20(void);
+int sumout(unsigned int);
 
 #endif /* MZCTRL_H_ */

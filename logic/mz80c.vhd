@@ -108,6 +108,13 @@ signal ZRAMCS : std_logic;
 signal ZCTRL : std_logic_vector(1 downto 0);
 signal ZBACK : std_logic;
 --
+-- CMT
+--
+signal SENSE : std_logic;
+signal MOTOR : std_logic;
+signal RBIT : std_logic;
+signal TLED : std_logic;
+--
 -- NiosII processor
 --
 signal PCLK : std_logic;
@@ -147,7 +154,7 @@ signal SD_DO : std_logic;
 --
 signal FL_ADDR0 : std_logic_vector(21 downto 0);
 --
--- Misc
+-- Reset & Filters
 --
 signal URST : std_logic;
 signal FRST : std_logic;
@@ -161,6 +168,9 @@ signal SR_BTN : std_logic_vector(7 downto 0);
 signal ZR_BTN : std_logic_vector(7 downto 0);
 signal FR_BTN : std_logic_vector(7 downto 0);
 signal F_BTN : std_logic;
+--
+-- Misc
+--
 signal MZMODE : std_logic_vector(1 downto 0);
 signal DMODE : std_logic_vector(1 downto 0);
 signal KBEN : std_logic;
@@ -168,6 +178,8 @@ signal KBEN_M : std_logic;
 signal KBDT : std_logic_vector(7 downto 0);
 signal T_LEDG : std_logic_vector(9 downto 0);
 signal ZLEDG : std_logic_vector(9 downto 0);
+signal RBYTE : std_logic_vector(15 downto 0);
+signal NUMEN : std_logic;
 
 --
 -- Components
@@ -197,8 +209,10 @@ component mz80_core
 		NDO			: out std_logic_vector(7 downto 0);		-- NiosII Data Bus(out)
 		-- Clock Input	 
 		CLOCK_50		: in std_logic;								--	50 MHz
-		-- Push Button
-		BUTTON		: in std_logic;								--	Pushbutton[2]
+		-- Tape Signals
+		SENSE			: in std_logic;								--	Pushbutton[2]
+		MOTOR			: out std_logic;								-- Motor On
+		RBIT			: in std_logic;								--	Read Data
 		-- DPDT Switch
 		SW				: in std_logic_vector(5 downto 0);		--	Toggle Switch[5:0]
 		-- LED
@@ -223,6 +237,7 @@ component mz80c_de0_sopc
 	port (
 		-- 1) global signals:
 		signal PCLK : IN STD_LOGIC;
+		signal SCLK : IN STD_LOGIC;
 		signal reset_n : IN STD_LOGIC;
 
 		-- the_INT_BUTTON
@@ -233,6 +248,9 @@ component mz80c_de0_sopc
 
 		-- the_KBEN
 		signal in_port_to_the_KBEN : IN STD_LOGIC;
+
+		-- the_NUM
+		signal out_port_from_the_NUM : OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
 
 		-- the_PAGE
 		signal out_port_from_the_PAGE : OUT STD_LOGIC_VECTOR (5 DOWNTO 0);
@@ -245,6 +263,15 @@ component mz80c_de0_sopc
 
 		-- the_Z80STAT
 		signal in_port_to_the_Z80STAT : IN STD_LOGIC;
+
+		-- the_cmt_0
+		signal EXIN_to_the_cmt_0 : IN STD_LOGIC;
+		signal LED_from_the_cmt_0 : OUT STD_LOGIC;
+		signal MOTOR_to_the_cmt_0 : IN STD_LOGIC;
+		signal NUMEN_from_the_cmt_0 : OUT STD_LOGIC;
+		signal PLAYSW_to_the_cmt_0 : IN STD_LOGIC;
+		signal POUT_from_the_cmt_0 : OUT STD_LOGIC;
+		signal SENSE_from_the_cmt_0 : OUT STD_LOGIC;
 
 		-- the_internal_sram2_0_avalon_int_sram_slave
 		signal ADDR_to_the_internal_sram2_0 : OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
@@ -430,8 +457,10 @@ begin
 		NDO => MDI,						-- NiosII Data Bus(out)
 		-- Clock Input
 		CLOCK_50 => CLOCK_50,		--	50 MHz
-		-- Push Button
-		BUTTON => BUTTON(2),			--	Pushbutton[2]
+		-- Tape Signals
+		SENSE => SENSE,				--	Pushbutton[2]
+		MOTOR	=> MOTOR,				-- Motor On
+		RBIT => RBIT,						--	Read Data
 		-- DPDT Switch
 		SW => SW(5 downto 0),		--	Toggle Switch[5:0]
 		-- LED
@@ -454,6 +483,7 @@ begin
 	SOPC0 : mz80c_de0_sopc port map(
 		-- 1) global signals:
 		PCLK => PCLK,
+		SCLK => SCLK,
       reset_n => ARST,
 		-- the_INT_BUTTON
 		in_port_to_the_INT_BUTTON => F_BTN,
@@ -461,6 +491,8 @@ begin
 		in_port_to_the_KBDATA => KBDT,
 		-- the_KBEN
 		in_port_to_the_KBEN => KBEN_M,
+		-- the_NUM
+		out_port_from_the_NUM => RBYTE,
 		-- the_PAGE
 		out_port_from_the_PAGE => SPAGE,
 		-- the_SPI_CS
@@ -469,6 +501,14 @@ begin
 		out_port_from_the_Z80CTRL => ZCTRL,
 		-- the_Z80STAT
 		in_port_to_the_Z80STAT => ZBACK,
+		-- the_cmt_0
+		EXIN_to_the_cmt_0 => GPIO1_D(0),
+		LED_from_the_cmt_0 => TLED,
+		MOTOR_to_the_cmt_0 => MOTOR,
+		NUMEN_from_the_cmt_0 => NUMEN,
+		PLAYSW_to_the_cmt_0 => BUTTON(2),
+		POUT_from_the_cmt_0 => RBIT,
+		SENSE_from_the_cmt_0 => SENSE,
 		-- the_internal_sram2_0_avalon_int_sram_slave
 		ADDR_to_the_internal_sram2_0 		=> SA,
 		CS_to_the_internal_sram2_0 		=> SRAMCS,
@@ -588,8 +628,8 @@ begin
 		-- Status Signal
 		MZMODE => MZMODE,				-- Hardware Mode
 		DMODE => DMODE,				-- Display Mode
-		NUMEN => '0',
-		NUMBER => (others=>'0')
+		NUMEN => NUMEN,
+		NUMBER => RBYTE
 	);
 
 	CTRL0 : mctrl Port map(
@@ -652,10 +692,10 @@ begin
 	ZRST<='0' when (ZR_BTN="00000000" and ZBACK='1') or ZCTRL(1)='0' else '1';
 
 	--
-	-- Misc
+	-- Misc & Debug
 	--
 	KBEN_M<=KBEN and (not ZBACK);
-	LEDG<=(not SD_CS)&T_LEDG(8 downto 2)&ZLEDG(1 downto 0);
+	LEDG<=(not SD_CS)&T_LEDG(8 downto 5)&TLED&T_LEDG(3 downto 2)&ZLEDG(1 downto 0);
 	--GPIO0_D(0)<=PS2_KBCLK;
 	--GPIO0_D(1)<=PS2_KBDAT;
 	--GPIO0_D(2)<=KBEN;

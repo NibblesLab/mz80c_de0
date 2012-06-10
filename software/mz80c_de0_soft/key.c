@@ -110,3 +110,13 @@ unsigned char get_key(void)
 
 	return(c);
 }
+
+/*
+ * Clear Key Buffer
+ */
+void keybuf_clear(void)
+{
+	while(key.rptr!=key.wptr){
+		get_key();
+	}
+}
