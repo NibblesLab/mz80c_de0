@@ -100,6 +100,7 @@ architecture rtl of mz80c is
 --
 signal ZCLK : std_logic;
 signal ZMWR : std_logic;
+signal ZIWR : std_logic;
 signal MRD : std_logic;
 signal ZA16 : std_logic_vector(15 downto 0);
 signal ZDO : std_logic_vector(7 downto 0);
@@ -114,6 +115,8 @@ signal SENSE : std_logic;
 signal MOTOR : std_logic;
 signal RBIT : std_logic;
 signal TLED : std_logic;
+signal HSKDO : std_logic_vector(7 downto 0);
+signal CMTINT : std_logic;
 --
 -- NiosII processor
 --
@@ -190,9 +193,11 @@ component mz80_core
 		RST_x			: in std_logic;
 		ZCLK			: out std_logic;
 		A				: out std_logic_vector(15 downto 0);
-		RAMDO			: out std_logic_vector(7 downto 0);
+		ZDO			: out std_logic_vector(7 downto 0);
 		RAMDI			: in std_logic_vector(7 downto 0);
+		HSKDI			: in std_logic_vector(7 downto 0);
 		MWR_x			: out std_logic;
+		IWR_x			: out std_logic;
 		BREQ			: in std_logic;
 		BACK			: out std_logic;
 		RAMCS_x		: out std_logic;
@@ -241,7 +246,7 @@ component mz80c_de0_sopc
 		signal reset_n : IN STD_LOGIC;
 
 		-- the_INT_BUTTON
-		signal in_port_to_the_INT_BUTTON : IN STD_LOGIC;
+		signal in_port_to_the_INT_BUTTON : IN STD_LOGIC_VECTOR (1 DOWNTO 0);
 
 		-- the_KBDATA
 		signal in_port_to_the_KBDATA : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
@@ -272,6 +277,12 @@ component mz80c_de0_sopc
 		signal PLAYSW_to_the_cmt_0 : IN STD_LOGIC;
 		signal POUT_from_the_cmt_0 : OUT STD_LOGIC;
 		signal SENSE_from_the_cmt_0 : OUT STD_LOGIC;
+		signal ZA8_to_the_cmt_0 : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		signal ZCLK_to_the_cmt_0 : IN STD_LOGIC;
+		signal ZDI_to_the_cmt_0 : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		signal ZDO_from_the_cmt_0 : OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
+		signal ZIWR_x_to_the_cmt_0 : IN STD_LOGIC;
+		signal interrupt_from_the_cmt_0 : OUT STD_LOGIC;
 
 		-- the_internal_sram2_0_avalon_int_sram_slave
 		signal ADDR_to_the_internal_sram2_0 : OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
@@ -438,9 +449,11 @@ begin
 		RST_x => ZRST,
 		ZCLK => ZCLK,
 		A => ZA16,
-		RAMDO => ZDO,
+		ZDO => ZDO,
 		RAMDI => ZDI(7 downto 0),
+		HSKDI => HSKDO,
 		MWR_x => ZMWR,
+		IWR_x => ZIWR,
 		BREQ => ZCTRL(0),
 		BACK => ZBACK,
 		RAMCS_x => ZRAMCS,
@@ -486,7 +499,7 @@ begin
 		SCLK => SCLK,
       reset_n => ARST,
 		-- the_INT_BUTTON
-		in_port_to_the_INT_BUTTON => F_BTN,
+		in_port_to_the_INT_BUTTON => CMTINT&F_BTN,
 		-- the_KBDATA
 		in_port_to_the_KBDATA => KBDT,
 		-- the_KBEN
@@ -509,6 +522,12 @@ begin
 		PLAYSW_to_the_cmt_0 => BUTTON(2),
 		POUT_from_the_cmt_0 => RBIT,
 		SENSE_from_the_cmt_0 => SENSE,
+		ZA8_to_the_cmt_0 => ZA16(7 downto 0),
+		ZCLK_to_the_cmt_0 => ZCLK,
+		ZDI_to_the_cmt_0 => ZDO,
+		ZDO_from_the_cmt_0 => HSKDO,
+		ZIWR_x_to_the_cmt_0 => ZIWR,
+		interrupt_from_the_cmt_0 => CMTINT,
 		-- the_internal_sram2_0_avalon_int_sram_slave
 		ADDR_to_the_internal_sram2_0 		=> SA,
 		CS_to_the_internal_sram2_0 		=> SRAMCS,

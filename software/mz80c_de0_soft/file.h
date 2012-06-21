@@ -16,5 +16,6 @@ void clear_rom(int);
 void GetPrivateProfileString(char *, char *, char *, char *, const char *);
 DWORD GetPrivateProfileInt(char *, char *, DWORD, const char *);
 void put_tape_formatting_pulse(void);
+void quick_load(void);
 
 #endif /* FILE_H_ */

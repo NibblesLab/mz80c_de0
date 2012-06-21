@@ -101,14 +101,14 @@ int select_menu(unsigned int level, unsigned int n_menu)
 
 	crev(level*13+1,num+1,level*13+12,num+1);
 	while(1){
-		if(z80_status.status==0) return(-1);
+		if((z80_status.status&0x01)==0) return(-1);
 		switch(get_key()){
 		case 0x0d:	// menu select
 			crev(level*13+1,num+1,level*13+12,num+1);
 			return(num);
 			break;
 		case 0x1b:	// escape menu
-			z80_status.status=0;
+			z80_status.status&=0xfffffffe;
 			break;
 		case 0x1d:	// menu back
 			crev(level*13+1,num+1,level*13+12,num+1);
@@ -206,7 +206,10 @@ int file_menu(unsigned int level, unsigned int select)
 
 	crev(level*13+1,num+1,level*13+12,num+1);
 	while(1){
-		if(z80_status.status==0) return(-1);
+		if((z80_status.status&0x01)==0){
+			free(items); free(attrib);
+			return(-1);
+		}
 		switch(get_key()){
 		case 0x08:	// directory back
 			crev(level*13+1,num+1,level*13+12,num+1);
@@ -227,10 +230,11 @@ int file_menu(unsigned int level, unsigned int select)
 			}
 			break;
 		case 0x1b:	// escape select
-			z80_status.status=0;
+			z80_status.status&=0xfffffffe;
 			break;
 		case 0x1d:	// back to menu
 			crev(level*13+1,num+1,level*13+12,num+1);
+			free(items); free(attrib);
 			return(999);
 			break;
 		case 0x1e:	// up
@@ -369,10 +373,10 @@ int view_inventory(void)
 	MZ_msg(14, 21, "KEY MAP     :"); MZ_msgx(27, 21, romdata->key80a_name, 12);
 
 	while(1){
-		if(z80_status.status==0) return(-1);
+		if((z80_status.status&0x01)==0) return(-1);
 		switch(get_key()){
 		case 0x1b:	// escape menu
-			z80_status.status=0;
+			z80_status.status&=0xfffffffe;
 			break;
 		case 0x1d:	// menu back
 			return(999);

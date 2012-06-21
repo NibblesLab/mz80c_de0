@@ -22,6 +22,7 @@ extern FATFS fs;
 extern DIR dirs;
 extern FILINFO finfo;
 extern char fname[13],tname[13];
+extern DWORD ql_pt;
 
 /*
  * Read File (bulk)
@@ -396,4 +397,37 @@ void put_tape_formatting_pulse(void)
 
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(INT_BUTTON_BASE,0xf);	// Enable IRQ
 
+}
+
+/*
+ * Quick Load MZT file
+ */
+void quick_load(void)
+{
+	DWORD tadr,size;
+	UINT i,r;
+	FIL fobj;
+	FRESULT res;
+	unsigned char *buf;
+
+	tadr=(IORD(CMT_0_BASE, 1)&0xffff)*2;
+	size=IORD(CMT_0_BASE, 2)&0xffff;
+	buf=malloc(size);
+
+	res=f_open(&fobj, tname, FA_OPEN_EXISTING | FA_READ);
+	res=f_lseek(&fobj, ql_pt);
+	res=f_read(&fobj, buf, size, &r);
+	IOWR_ALTERA_AVALON_PIO_DATA(PAGE_BASE,0);	// Set Page
+	for(i=0;i<size;i++){
+		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+tadr))[i*2]=buf[i];
+	}
+
+	if(f_eof(&fobj)){
+		tname[0]='\0';	// Release Tape Data
+		IOWR(CMT_0_BASE, 1, 0);
+	}
+
+	res=f_close(&fobj);
+	ql_pt+=size;
+	free(buf);
 }

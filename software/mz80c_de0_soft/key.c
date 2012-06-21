@@ -112,6 +112,17 @@ unsigned char get_key(void)
 }
 
 /*
+ * Pre-Input Keys
+ */
+void key0(unsigned char *kdata)
+{
+	while(*kdata!='\0'){
+		key.kcode[key.wptr++]=*(kdata++);
+		key.wptr=key.wptr&0x1f;
+	}
+}
+
+/*
  * Clear Key Buffer
  */
 void keybuf_clear(void)

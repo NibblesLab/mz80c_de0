@@ -42,10 +42,16 @@ static void menu_button(void* context)
 {
 	volatile z80_t* z80status_pt = (volatile z80_t*)context;
 
-	if(z80status_pt->status==0)
-		z80status_pt->status=1;	// Set Flag
-	else
-		z80status_pt->status=0;	// Clear Flag
+	if((IORD_ALTERA_AVALON_PIO_DATA(INT_BUTTON_BASE)&0x01)==0){
+		if((z80status_pt->status&0x01)==0)
+			z80status_pt->status|=1;	// Set Flag
+		else
+			z80status_pt->status&=0xfffffffe;	// Clear Flag
+	}
+
+	if((IORD_ALTERA_AVALON_PIO_DATA(INT_BUTTON_BASE)&0x02)==0){
+		z80status_pt->status|=2;	// Set Flag
+	}
 
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(INT_BUTTON_BASE, 0);
 	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(INT_BUTTON_BASE, 0xf);

@@ -28,6 +28,7 @@ FATFS fs;
 DIR dirs;
 FILINFO finfo;
 char fname[13],tname[13];	//,dname1[13],dname2[13];
+DWORD ql_pt;
 
 void ROM_read(char *buffer, char *data)
 {
@@ -166,6 +167,7 @@ void System_Initialize(void)
 int main()
 {
 	int k;
+	unsigned char settape[]={0x72, 0x5a, 0x5a,'\0'};
 	//UINT r;
 
 	// Initialize Disk I/F and ROM
@@ -182,64 +184,100 @@ int main()
 				put_tape_formatting_pulse();
 		}
 
-		// Z80-Bus request
-		MZ_Brequest();
-		do {
-			k=menu(0,0,0);	// Root menu
-			switch(k){
-			case 0:
-				if(view_inventory()==999) continue;
+		if((z80_status.status&0x01)==0x01){
+			// Z80-Bus request
+			MZ_Brequest();
+			do {
+				k=menu(0,0,0);	// Root menu
+				switch(k){
+				case 0:
+					if(view_inventory()==999) continue;
+					break;
+				case 3:
+					direct_load();
+					break;
+				case 10:
+					strcpy(tname, fname);
+					IOWR(CMT_0_BASE, 1, 1);
+					ql_pt=0;
+					break;
+				case 20:
+					tname[0]='\0';
+					IOWR(CMT_0_BASE, 1, 0);
+					break;
+				case 21:
+					//dname1[0]='\0';
+					break;
+				case 22:
+					//dname2[0]='\0';
+					break;
+				case 40:
+				case 41:
+				case 42:
+				case 43:
+				case 44:
+				case 45:
+				case 46:
+				case 47:
+				case 48:
+					set_rom(k);
+					if(view_inventory()==999) continue;
+					break;
+				case 50:
+				case 51:
+				case 52:
+				case 53:
+				case 54:
+				case 55:
+				case 56:
+				case 57:
+				case 58:
+					clear_rom(k);
+					if(view_inventory()==999) continue;
+				default:
+					break;
+				}
 				break;
-			case 3:
-				direct_load();
-				break;
-			case 10:
-				strcpy(tname, fname);
-				IOWR(CMT_0_BASE, 1, 1);
-				break;
-			case 20:
-				tname[0]='\0';
-				IOWR(CMT_0_BASE, 1, 0);
-				break;
-			case 21:
-				//dname1[0]='\0';
-				break;
-			case 22:
-				//dname2[0]='\0';
-				break;
-			case 40:
-			case 41:
-			case 42:
-			case 43:
-			case 44:
-			case 45:
-			case 46:
-			case 47:
-			case 48:
-				set_rom(k);
-				if(view_inventory()==999) continue;
-				break;
-			case 50:
-			case 51:
-			case 52:
-			case 53:
-			case 54:
-			case 55:
-			case 56:
-			case 57:
-			case 58:
-				clear_rom(k);
-				if(view_inventory()==999) continue;
-			default:
-				break;
-			}
-			break;
-		}while(1);
-		keybuf_clear();
-		z80_status.status=0;
+			}while(1);
+			keybuf_clear();
+			z80_status.status&=0xfffffffe;
 
-		// Z80-Bus release
-		MZ_Brelease();
+			// Z80-Bus release
+			MZ_Brelease();
+		}
+
+		// Quick Load/Save
+		if((z80_status.status&0x02)==0x02){
+			if(IORD(CMT_0_BASE, 3)==0x0f){	// CMD is Load
+				IOWR(CMT_0_BASE, 2, 0x80);	// set STAT busy
+
+				// Wait for confirm busy by Z80
+				while(IORD(CMT_0_BASE, 3)!=0);
+
+				if(tname[0]=='\0'){	// if tape file is empty
+					z80_status.status=0x03;
+					// Z80-Bus request
+					MZ_Brequest();
+					key0(settape);
+					k=menu(0,0,0);	// Root menu
+					// Z80-Bus release
+					MZ_Brelease();
+					z80_status.status=0x02;
+					if(k!=10){
+						z80_status.status=0;
+						IOWR(CMT_0_BASE, 2, 0xff);	// set STAT error
+						continue;
+					}
+					strcpy(tname, fname);
+					IOWR(CMT_0_BASE, 1, 1);
+					ql_pt=0;
+				}
+
+				quick_load();
+				IOWR(CMT_0_BASE, 2, 0);	// set STAT free
+				z80_status.status&=0xfffffffd;
+			}
+ 		}
 	}
 
 	return 0;

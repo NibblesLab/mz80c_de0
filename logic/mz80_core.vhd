@@ -17,9 +17,11 @@ entity mz80_core is
 		RST_x			: in std_logic;
 		ZCLK			: out std_logic;
 		A				: out std_logic_vector(15 downto 0);
-		RAMDO			: out std_logic_vector(7 downto 0);
+		ZDO			: out std_logic_vector(7 downto 0);
 		RAMDI			: in std_logic_vector(7 downto 0);
+		HSKDI			: in std_logic_vector(7 downto 0);
 		MWR_x			: out std_logic;
+		IWR_x			: out std_logic;
 		BREQ			: in std_logic;
 		BACK			: out std_logic;
 		RAMCS_x		: out std_logic;
@@ -71,6 +73,7 @@ signal WR : std_logic;
 signal RD : std_logic;
 signal MWR : std_logic;
 signal MRD : std_logic;
+signal IWR : std_logic;
 signal M1 : std_logic;
 signal RFSH : std_logic;
 signal A16 : std_logic_vector(15 downto 0);
@@ -99,6 +102,7 @@ signal BUF : std_logic_vector(9 downto 0);
 signal CSMROM : std_logic;
 signal ARST : std_logic;
 signal MRST : std_logic;
+signal CSHSK : std_logic;
 --
 -- SDRAM
 --
@@ -444,6 +448,7 @@ begin
 	--
 	MRD<=MREQ or RD;
 	MWR<=MREQ or WR;
+	IWR<=IORQ or WR;
 
 	--
 	-- Data Bus
@@ -453,6 +458,7 @@ begin
 			DO367 when CSE2_x='0' else
 			VRAMDO when CSD_x='0' else
 			--ROMDO when CSMROM='0' else
+			HSKDI when CSHSK='0' else
 			RAMDI when CSRAM='0' else (others=>'0');
 
 	--
@@ -466,6 +472,7 @@ begin
 	CSD_x<='0' when A16(15 downto 12)="1101" and MREQ='0' else '1';
 	--CSMROM<='0' when A16(15 downto 12)="0000" and MREQ='0' else '1';
 	CSRAM<='0' when ( A16(15)='0' or A16(15 downto 14)="10" or A16(15 downto 12)="1100" or A16(15 downto 12)="1111" or (A16(15 downto 11)="11101" and MZMODE(1)='1') ) and MREQ='0' else '1';
+	CSHSK<='0' when A16(7 downto 3)="10001" and IORQ='0' else '1';
 
 	--
 	-- Video Output
@@ -482,9 +489,10 @@ begin
 	ZCLK<=CK2M;
 	A<=A16;
 	BACK<=BAK;
-	RAMDO<=DO;
+	ZDO<=DO;
 	RAMCS_x<=CSRAM;
 	MWR_x<='1' when A16(15 downto 12)="0000" or A16(15 downto 12)="1111" or A16(15 downto 11)="11101" else MWR;
+	IWR_x<=IWR;
 
 	--
 	-- Misc
