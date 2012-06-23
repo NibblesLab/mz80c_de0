@@ -34,6 +34,7 @@ unsigned char kcconv[2][144]=
 //      0    1    2    3    4    5    6    7    8    9    a    b    c    d    e    f
 
 volatile keyb_t key;
+int pushed;	// Push Flag
 
 /*
  * Key Input ISR
@@ -99,8 +100,12 @@ unsigned char get_key(void)
 			key.flage0=0;
 			break;
 		default:		// Convert to ASCII
-			if(key.flagf0==0)
+			if(key.flagf0==0){
 				c=kcconv[key.Lshift|key.Rshift][k];
+				pushed=1;
+			}else{
+				pushed=0;
+			}
 			key.flagf0=0;
 			key.flage0=0;
 			break;
@@ -127,7 +132,7 @@ void key0(unsigned char *kdata)
  */
 void keybuf_clear(void)
 {
-	while(key.rptr!=key.wptr){
+	while(pushed!=0){
 		get_key();
 	}
 }
