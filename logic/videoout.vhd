@@ -30,6 +30,8 @@ entity videoout is
 		CSE_x  : in std_logic;								-- CPU Memory Request(Control)
 		RD_x   : in std_logic;								-- CPU Read Signal
 		WR_x   : in std_logic;								-- CPU Write Signal
+		MREQ_x : in std_logic;								-- CPU Memory Request
+		WAIT_x : out std_logic;								-- CPU Wait Request
 		DI     : in std_logic_vector(7 downto 0);		-- CPU Data Bus(in)
 		DO     : out std_logic_vector(7 downto 0);	-- CPU Data Bus(out)
 		-- Video Signals
@@ -62,36 +64,45 @@ signal CK2Mi   : std_logic;	-- 2MHz
 --
 -- Registers
 --
-signal DIV     : std_logic_vector(8 downto 0);	-- Clock Divider
-signal HCOUNT  : std_logic_vector(8 downto 0);	-- Counter for Horizontal Signals
-signal VCOUNT  : std_logic_vector(8 downto 0);	-- Counter for Vertical Signals
-signal VADR    : std_logic_vector(10 downto 0);	-- VRAM Address(selected)
-signal VADRC   : std_logic_vector(10 downto 0);	-- VRAM Address
-signal VADRL   : std_logic_vector(10 downto 0);	-- VRAM Address(latched)
-signal SDAT    : std_logic_vector(7 downto 0);	-- Shift Register to Display
-signal ADAT    : std_logic_vector(7 downto 0);	-- Color Attribute(B-in Color)
-signal CDAT    : std_logic_vector(7 downto 0);	-- Color Attribute(ColorGal5)
-signal ADATi   : std_logic_vector(7 downto 0);	-- Color Attribute(B-in Color, before confrict)
-signal CDATi   : std_logic_vector(7 downto 0);	-- Color Attribute(ColorGal5, before confrict)
+signal DIV      : std_logic_vector(8 downto 0);		-- Clock Divider
+signal HCOUNT   : std_logic_vector(8 downto 0);		-- Counter for Horizontal Signals
+signal VCOUNT   : std_logic_vector(8 downto 0);		-- Counter for Vertical Signals
+signal VADR     : std_logic_vector(10 downto 0);	-- VRAM Address(selected)
+signal VADRO    : std_logic_vector(10 downto 0);	-- VRAM Address(selected, offseted)
+signal VADRC    : std_logic_vector(10 downto 0);	-- VRAM Address
+signal VADRL    : std_logic_vector(10 downto 0);	-- VRAM Address(latched)
+signal OFST     : std_logic_vector(7 downto 0);		-- VRAM Offset
+signal SDAT     : std_logic_vector(7 downto 0);		-- Shift Register to Display
+signal ADAT     : std_logic_vector(7 downto 0);		-- Color Attribute(B-in Color)
+signal CDAT     : std_logic_vector(7 downto 0);		-- Color Attribute(ColorGal5)
+signal ADATi    : std_logic_vector(7 downto 0);		-- Color Attribute(B-in Color, before confrict)
+signal CDATi    : std_logic_vector(7 downto 0);		-- Color Attribute(ColorGal5, before confrict)
 --
 -- CPU Access
 --
-signal MA      : std_logic_vector(11 downto 0);	-- Masked Address
-signal CSV_x   : std_logic;							-- Chip Select (VRAM)
-signal CSA_x   : std_logic;							-- Chip Select (ARAM)
-signal CSINV_x : std_logic;							-- Chip Select (Reverse)
-signal CSCG5_x : std_logic;							-- Chip Select (ColorGal5)
-signal NCSV_x  : std_logic;							-- Chip Select (VRAM, NiosII)
-signal NCSA_x  : std_logic;							-- Chip Select (ARAM, NiosII)
-signal VWEN    : std_logic;							-- WR + MREQ (VRAM)
-signal AWEN    : std_logic;							-- WR + MREQ (ARAM)
-signal NWEN0   : std_logic;							-- WR + CS (VRAM, NiosII)
-signal NWEN1   : std_logic;							-- WR + CS (ARAM, NiosII)
+signal MA       : std_logic_vector(11 downto 0);	-- Masked Address
+signal CSV_x    : std_logic;								-- Chip Select (VRAM)
+signal CSA_x    : std_logic;								-- Chip Select (ARAM)
+signal CSINV_x  : std_logic;								-- Chip Select (Reverse)
+signal CSCG5_x  : std_logic;								-- Chip Select (ColorGal5)
+signal CSSCL_x  : std_logic;								-- Chip Select (Hardware Scroll)
+signal NCSV_x   : std_logic;								-- Chip Select (VRAM, NiosII)
+signal NCSA_x   : std_logic;								-- Chip Select (ARAM, NiosII)
+signal VWEN     : std_logic;								-- WR + MREQ (VRAM)
+signal AWEN     : std_logic;								-- WR + MREQ (ARAM)
+signal NWEN0    : std_logic;								-- WR + CS (VRAM, NiosII)
+signal NWEN1    : std_logic;								-- WR + CS (ARAM, NiosII)
+signal WAITi_x  : std_logic;								-- Wait
+signal WAITii_x : std_logic;								-- Wait(delayed)
 --
 -- Internal Signals
 --
 signal HDISPEN : std_logic;							-- Display Enable for Horizontal, almost same as HBLANK
 signal HBLANKi : std_logic;							-- Horizontal Blanking
+signal BLNK		: std_logic;							-- Horizontal Blanking (for wait)
+signal XBLNK	: std_logic;							-- Horizontal Blanking (for wait)
+signal CPUENi	: std_logic;							-- Address Select w/wait control
+signal CPUEN	: std_logic;							-- Address Select w/wait control
 signal VDISPEN : std_logic;							-- Display Enable for Vertical, same as VBLANK
 signal MB		: std_logic;							-- Display Signal (Mono, Blue)
 signal MG		: std_logic;							-- Display Signal (Mono, Green)
@@ -184,7 +195,7 @@ begin
 	-- Instantiation
 	--
 	VVRAM0 : dpram2k PORT MAP (
-		address_a	 => VADR(10 downto 0),
+		address_a	 => VADR,
 		address_b	 => NA(10 downto 0),
 		clock_a	 => CK8Mi,
 		clock_b	 => NCLK,
@@ -197,7 +208,7 @@ begin
 	);
 
 	VARAM0 : dpram2k PORT MAP (
-		address_a	 => VADR(10 downto 0),
+		address_a	 => VADR,
 		address_b	 => NA(10 downto 0),
 		clock_a	 => CK8Mi,
 		clock_b	 => NCLK,
@@ -258,6 +269,7 @@ begin
 		if RST='0' then
 			HCOUNT<="111111100";
 			HBLANKi<='1';
+			BLNK<='0';
 			HSYNC<='1';
 			VDISPEN<='1';
 			VSYNC<='1';
@@ -286,6 +298,7 @@ begin
 				HDISPEN<=VDISPEN;		-- if V-DISP is Enable then H-DISP Start
 			elsif HCOUNT=318 then
 				HBLANKi<='1';			-- H-Blank Start
+				BLNK<='1';
 			elsif HCOUNT=320 then
 				HDISPEN<='0';			-- H-DISP End
 			elsif HCOUNT=393 then
@@ -294,6 +307,8 @@ begin
 				VADRL<=VADRC;			-- Save Most-Left-Column Address
 			elsif HCOUNT=438 then
 				HSYNC<='1';				-- H-Sync Pulse End
+			elsif HCOUNT=486 then
+				BLNK<='0';
 			elsif HCOUNT=510 then
 				HBLANKi<='0';			-- H-Blank End
 			end if;
@@ -333,6 +348,7 @@ begin
 	process( RST, CK2Mi ) begin
 		if RST='0' then
 			INV<='0';
+			OFST<=(others=>'0');
 		elsif CK2Mi'event and CK2Mi='0' then
 			if CSINV_x='0' and RD_x='0' then
 				INV<=MA(0);
@@ -340,8 +356,36 @@ begin
 			if CSCG5_x='0' and WR_x='0' then
 				CCODE<=DI;
 			end if;
+			if CSSCL_x='0' and RD_x='0' then
+				OFST<=A(7 downto 0);
+			end if;
 		end if;
 	end process;
+
+	--
+	-- Timing Conditioning and Wait
+	--
+	process( MREQ_x ) begin
+		if MREQ_x'event and MREQ_x='0' then
+			XBLNK<=BLNK;
+		end if;
+	end process;
+
+	process( MREQ_x, CK2Mi ) begin
+		if MREQ_x='1' then
+			CPUENi<='0';
+		elsif CK2Mi'event and CK2Mi='0' then
+			CPUENi<=not XBLNK;
+		end if;
+	end process;
+
+	process( CK2Mi ) begin
+		if CK2Mi'event and CK2Mi='1' then
+			WAITii_x<=WAITi_x;
+		end if;
+	end process;
+	WAITi_x<='0' when CSD_x='0' and XBLNK='0' and BLNK='0' and MZMODE(1)='1' else '1';
+	WAIT_x<=WAITi_x and WAITii_x;
 
 	--
 	-- Mask by Mode
@@ -351,20 +395,23 @@ begin
 	CSA_x<='0' when CSD_x='0' and MA(11)='1' else '1';
 	NCSV_x<='0' when NCS_x='0' and NA(15 downto 11)="11010" else '1';
 	NCSA_x<='0' when NCS_x='0' and NA(15 downto 11)="11011" else '1';
-	VWEN<=not(WR_x or CSV_x);
-	AWEN<=not(WR_x or CSA_x);
+	VWEN<='1' when WR_x='0' and CSV_x='0' and CPUEN='1' else '0';
+	AWEN<='1' when WR_x='0' and CSA_x='0' and CPUEN='1' else '0';
 	NWEN0<=not(NWR_x or NCSV_x);
 	NWEN1<=not(NWR_x or NCSA_x);
 	CSINV_x<='0' when CSE_x='0' and MZMODE(1)='1' and MA(11 downto 9)="000" and MA(4 downto 2)="101" else '1';
 	CSCG5_x<='0' when CSE_x='0' and MA(4 downto 2)="011" and ((MA(11) or MA(10) or MA(9)) and MZMODE(1))='0' else '1';
+	CSSCL_x<='0' when CSE_x='0' and A(11 downto 8)="0010" and MZMODE="11" else '1';
+	CPUEN<='1' when MZMODE(1)='0' or (CPUENi='1' and BLNK='1' and MZMODE(1)='1') or BLNK='1' else '0';
 
 	--
 	-- Bus Select
 	--
-	VADR<=MA(10 downto 0) when CSD_x='0' else VADRC;
-	DCODE<=DI when CSV_x='0' and WR_x='0' else VRAMDO;
-	ADAT<=DI when CSA_x='0' and WR_x='0' else ADATi;
-	CDAT<=DI when CSD_x='0' and WR_x='0' else CDATi;
+	VADRO<=VADRC when MZMODE/="11" or BACK='0' else VADRC+(OFST&"000");
+	VADR<=MA(10 downto 0) when CSD_x='0' and CPUEN='1' else VADRO;
+	DCODE<=DI when CSV_x='0' and CPUEN='1' and WR_x='0' else VRAMDO;
+	ADAT<=DI when CSA_x='0' and CPUEN='1' and WR_x='0' else ADATi;
+	CDAT<=DI when CSD_x='0' and CPUEN='1' and WR_x='0' else CDATi;
 	DO<=VRAMDO when MA(11)='0' else ARAMDO;
 	NDO<=NDO0 when NCSV_x='0' else
 		  NDO1 when NCSA_x='0' else
@@ -399,7 +446,7 @@ begin
 	--
 	CK8M<=CK8Mi;
 	CK2M<=CK2Mi;
-	VBLANK<=not VDISPEN;
+	VBLANK<=VDISPEN;
 	HBLANK<=HBLANKi;
 	ROUT<=BR  when DMODE="11" or BACK='0' else
 			MR  when DMODE="00" else

@@ -74,6 +74,7 @@ signal RD : std_logic;
 signal MWR : std_logic;
 signal MRD : std_logic;
 signal IWR : std_logic;
+signal ZWAIT : std_logic;
 signal M1 : std_logic;
 signal RFSH : std_logic;
 signal A16 : std_logic_vector(15 downto 0);
@@ -253,6 +254,8 @@ component videoout is
 		CSE_x  : in std_logic;								-- CPU Memory Request(Control)
 		RD_x   : in std_logic;								-- CPU Read Signal
 		WR_x   : in std_logic;								-- CPU Write Signal
+		MREQ_x : in std_logic;								-- CPU Memory Request
+		WAIT_x : out std_logic;								-- CPU Wait Request
 		DI     : in std_logic_vector(7 downto 0);		-- CPU Data Bus(in)
 		DO     : out std_logic_vector(7 downto 0);	-- CPU Data Bus(out)
 		-- Video Signals
@@ -308,10 +311,16 @@ begin
 	--
 	-- Instantiation
 	--
-	CPU0 : T80s port map (
+	CPU0 : T80s
+	generic map(
+		Mode => 0,	-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+		T2Write => 1,	-- 0 => WR_n active in T3, /=0 => WR_n active in T2
+		IOWait => 1	-- 0 => Single cycle I/O, 1 => Std I/O cycle
+	)
+	port map (
 		RESET_n => RST_x,
 		CLK_n => CK2M,
-		WAIT_n => '1',		--ZWAIT,
+		WAIT_n => ZWAIT,
 		INT_n => INT,
 		NMI_n => '1',
 		BUSRQ_n => BREQ,
@@ -398,6 +407,8 @@ begin
 		CSE_x => CSE_x,			-- CPU Memory Request(Control)
 		RD_x => RD,					-- CPU Read Signal
 		WR_x => WR,					-- CPU Write Signal
+		MREQ_x => MREQ,			-- CPU Memory Request
+		WAIT_x => ZWAIT,			-- CPU Wait Request
 		DI => DO,					-- CPU Data Bus(in)
 		DO => VRAMDO,				-- CPU Data Bus(out)
 		-- Video Signals
