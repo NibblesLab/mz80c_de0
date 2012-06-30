@@ -60,7 +60,7 @@ void System_Initialize(void)
 	IOWR_ALTERA_AVALON_PIO_DATA(PAGE_BASE,0);	// Set Page
 	// Extended ROM
 	for(i=0;i<2048;i++){	// $E800-$EFFF
-		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+0xe800))[i*2]=romdata->ex[i];
+		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+(0xe800<<1)))[i*2]=romdata->ex[i];
 	}
 	switch(IORD_ALTERA_AVALON_PIO_DATA(PIO_0_BASE)&0x300){
 	case 0x000:
@@ -81,7 +81,7 @@ void System_Initialize(void)
 	// Monitor, FD I/F ROM
 	for(i=0;i<4096;i++){	// $0000-$0FFF
 		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE))[i*2]=monrom[i];
-		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+0xf000))[i*2]=fdrom[i];
+		((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+(0xf000<<1)))[i*2]=fdrom[i];
 	}
 	// CG ROM
 	for(i=0;i<2048;i++){	// (0xc800-0xcfff)
@@ -127,7 +127,7 @@ void System_Initialize(void)
 			for(i=0;i<2048;i++) data[i]=0xff;
 			ROM_read(buffer, data);
 			for(i=0;i<2048;i++){	// $E800-$EFFF
-				((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+0xe800))[i*2]=data[i];
+				((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+(0xe800<<1)))[i*2]=data[i];
 			}
 		}
 		// FD I/F ROM
@@ -138,7 +138,7 @@ void System_Initialize(void)
 			for(i=0;i<4096;i++) data[i]=0xff;
 			ROM_read(buffer, data);
 			for(i=0;i<4096;i++){	// $F000-$FFFF
-				((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+0xf000))[i*2]=data[i];
+				((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+(0xf000<<1)))[i*2]=data[i];
 			}
 		}
 		// CG ROM
