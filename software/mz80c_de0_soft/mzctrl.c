@@ -95,6 +95,23 @@ void MZ_Brequest(void)
 }
 
 /*
+ * Bus Request for MZ(not Clear Screen)
+ */
+void MZ_Brequest2(void)
+{
+	unsigned int i;
+
+	IOWR_ALTERA_AVALON_PIO_DATA(Z80CTRL_BASE,0x02);	// Bus Request
+	while((IORD_ALTERA_AVALON_PIO_DATA(Z80STAT_BASE)&0x01)!=0);	// Wait Bus Acknowledge
+
+	// Save and Clear VRAM/ARAM
+	for(i=0;i<1000;i++){
+		buvram[i]=((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd000))[i];
+		buaram[i]=((volatile unsigned char*)(INTERNAL_SRAM8_0_BASE+0xd800))[i];
+	}
+}
+
+/*
  * Bus Release for MZ
  */
 void MZ_Brelease(void)

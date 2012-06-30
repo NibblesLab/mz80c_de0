@@ -166,7 +166,7 @@ void System_Initialize(void)
 
 int main()
 {
-	int k;
+	int i,k;
 	unsigned char settape[]={0x72, 0x5a, 0x5a,'\0'};
 	//UINT r;
 
@@ -195,6 +195,10 @@ int main()
 					break;
 				case 3:
 					direct_load();
+					break;
+				case 6:
+					f_mount(0,&fs);
+					tname[0]='\0';	// dname1[0]='\0'; dname2[0]='\0';
 					break;
 				case 10:
 					strcpy(tname, fname);
@@ -268,6 +272,7 @@ int main()
 						IOWR(CMT_0_BASE, 2, 0xff);	// set STAT error
 						continue;
 					}
+					//keybuf_clear();
 					strcpy(tname, fname);
 					IOWR(CMT_0_BASE, 1, 1);
 					ql_pt=0;
@@ -275,6 +280,34 @@ int main()
 
 				quick_load();
 				IOWR(CMT_0_BASE, 2, 0);	// set STAT free
+				z80_status.status&=0xfffffffd;
+			}
+
+			if(IORD(CMT_0_BASE, 3)==0xf0){	// CMD is Save
+				IOWR(CMT_0_BASE, 2, 0x80);	// set STAT busy
+
+				// Wait for confirm busy by Z80
+				while(IORD(CMT_0_BASE, 3)!=0);
+
+				if(tname[0]=='\0'){	// if tape file is empty
+					// Z80-Bus request
+					MZ_Brequest();
+					i=input_file_name();
+					// Z80-Bus release
+					MZ_Brelease();
+					if(tname[0]=='\0'||i<0){
+						z80_status.status=0;
+						IOWR(CMT_0_BASE, 2, 0xff);	// set STAT error
+						continue;
+					}
+					keybuf_clear();
+					IOWR(CMT_0_BASE, 1, 1);
+				}
+
+				if(quick_save()!=FR_OK)
+					IOWR(CMT_0_BASE, 2, 0xff);	// set STAT error
+				else
+					IOWR(CMT_0_BASE, 2, 0);	// set STAT free
 				z80_status.status&=0xfffffffd;
 			}
  		}

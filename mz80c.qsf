@@ -570,6 +570,7 @@ set_global_assignment -name ENABLE_SIGNALTAP ON
 set_global_assignment -name USE_SIGNALTAP_FILE stp2.stp
 set_location_assignment PIN_Y2 -to FL_DQ[15]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FL_DQ[15]
+set_global_assignment -name SDC_FILE mz80c.sdc
 set_global_assignment -name VHDL_FILE logic/mz80c.vhd
 set_global_assignment -name VHDL_FILE logic/mz80_core.vhd
 set_global_assignment -name VHDL_FILE logic/T80/T80_Reg.vhd

@@ -30,6 +30,6 @@ typedef struct {
 	char key80a_name[13];
 } ROMS_t;
 
-#define version "0.2"
+#define version "0.3"
 
 #endif /* MZ80C_DE0_MAIN_H_ */

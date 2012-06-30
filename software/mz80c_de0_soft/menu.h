@@ -20,5 +20,7 @@ void disp_menu(unsigned int, unsigned int);
 int select_menu(unsigned int, unsigned int);
 int menu(unsigned int, unsigned int, unsigned int);
 int view_inventory(void);
+int getl(int, int, int, char *);
+int input_file_name(void);
 
 #endif /* MENU_H_ */

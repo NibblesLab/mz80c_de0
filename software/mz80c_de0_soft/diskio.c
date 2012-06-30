@@ -374,19 +374,19 @@ DRESULT disk_write(
 {
 	BYTE i,c;
 	DWORD SN;
-	unsigned char dc[2],d;
+	unsigned char dc[3],d;
 	unsigned short r;
 
 	if(status!=0) return RES_NOTRDY;
 
 	for(i=0;i<SectorCount;i++){
 		SN= EN_BLOCK==1 ? SectorNumber : (SectorNumber<<9);
-		mmc_cmd(24, SN);
+		d=mmc_cmd(24, SN);
 		SectorNumber++;
 		// wait busy
 		while(d==0xff){
 			r=alt_avalon_spi_command(SPI_0_BASE, SPI_DUMMY_PORT, 0, &c, 1, &d, 0);
-			alt_putstr("W ");
+			//alt_putstr("W ");
 		}
 		if(d!=0x00){
 			//putss("1e\r");
@@ -395,20 +395,20 @@ DRESULT disk_write(
 		}
 
 		// wait and send token
-		dc[0]=0xff; dc[1]=0xfe;
-		r=alt_avalon_spi_command(SPI_0_BASE, SPI_DUMMY_PORT, 2, dc, 0, &d, 0);
+		dc[0]=0xff; dc[1]=0xff; dc[2]=0xfe;
+		r=alt_avalon_spi_command(SPI_0_BASE, SPI_SD_PORT, 3, dc, 0, &d, 0);
 
-		r=alt_avalon_spi_command(SPI_0_BASE, SPI_DUMMY_PORT, 512, Buffer, 0, &d, 0);
+		r=alt_avalon_spi_command(SPI_0_BASE, SPI_SD_PORT, 512, Buffer, 0, &d, 0);
 		Buffer+=512;
 
 		// CRC
-		r=alt_avalon_spi_command(SPI_0_BASE, SPI_DUMMY_PORT, 0, &c, 2, dc, 0);
-		while(d==0xff){
+		r=alt_avalon_spi_command(SPI_0_BASE, SPI_SD_PORT, 2, dc, 0, &d, 0);
+		do{
 			r=alt_avalon_spi_command(SPI_0_BASE, SPI_DUMMY_PORT, 0, &c, 1, &d, 0);
-			alt_putstr("W ");
-		}
+			//alt_putstr("W ");
+			if((d&0x1f)==0x0d) return RES_ERROR;
+		}while(d!=0xff);
 		mmc_quit();	// CS=H
-		if((d&0x1f)==0x0d) return RES_ERROR;
 	}
 
 	return RES_OK;

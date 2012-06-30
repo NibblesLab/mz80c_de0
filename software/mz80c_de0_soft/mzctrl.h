@@ -16,6 +16,7 @@ typedef struct {
 void button_int_regist(void);
 void MZ_release(void);
 void MZ_Brequest(void);
+void MZ_Brequest2(void);
 void MZ_Brelease(void);
 void MZ_disp(unsigned int, unsigned int, unsigned char);
 void MZ_msg(unsigned int, unsigned int, char *);

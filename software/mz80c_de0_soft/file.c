@@ -431,3 +431,32 @@ void quick_load(void)
 	ql_pt+=size;
 	free(buf);
 }
+
+/*
+ * Quick Save MZT file
+ */
+FRESULT quick_save(void)
+{
+	DWORD tadr,size;
+	UINT i,r;
+	FIL fobj;
+	FRESULT res;
+	unsigned char *buf;
+
+	tadr=(IORD(CMT_0_BASE, 1)&0xffff)*2;
+	size=IORD(CMT_0_BASE, 2)&0xffff;
+	buf=malloc(size);
+
+	res=f_open(&fobj, tname, FA_OPEN_ALWAYS | FA_WRITE);
+	if(res!=FR_OK) return(res);
+	res=f_lseek(&fobj, f_size(&fobj));			// Ready to Append
+	IOWR_ALTERA_AVALON_PIO_DATA(PAGE_BASE,0);	// Set Page
+	for(i=0;i<size;i++){
+		buf[i]=((volatile unsigned char*)(INTERNAL_SRAM2_0_BASE+tadr))[i*2];
+	}
+	res=f_write(&fobj, buf, size, &r);
+
+	res=f_close(&fobj);
+	free(buf);
+	return(FR_OK);
+}
