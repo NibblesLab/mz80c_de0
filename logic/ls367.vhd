@@ -52,7 +52,7 @@ begin
 		if RST='0' then
 			TCOUNT<=(others=>'0');
 		elsif CLKIN'event and CLKIN='1' then
-			if( TCOUNT=26247 ) then
+			if( TCOUNT=26195 ) then
 				TCOUNT<=(others=>'0');
 				TEMPO<=not TEMPO;
 			else
