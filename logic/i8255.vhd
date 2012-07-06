@@ -70,7 +70,7 @@ signal SELCT : std_logic;
 -- CURSOR blink
 --
 signal TBLNK : std_logic;
-signal CCOUNT : std_logic_vector(3 downto 0);
+signal CCOUNT : std_logic_vector(4 downto 0);
 --
 -- Remote
 --
@@ -187,10 +187,11 @@ begin
 		if( PA(7)='0' ) then
 			CCOUNT<=(others=>'0');
 		elsif( CLKIN'event and CLKIN='1' ) then
-			CCOUNT<=CCOUNT+'1';
-			if( CCOUNT=13 ) then
+			if( CCOUNT=18 ) then
 				CCOUNT<=(others=>'0');
 				TBLNK<=not TBLNK;
+			else
+				CCOUNT<=CCOUNT+'1';
 			end if;
 		end if;
 	end process;
