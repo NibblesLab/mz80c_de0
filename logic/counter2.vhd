@@ -2,11 +2,11 @@
 -- counter2.vhd
 --
 -- Intel 8253 counter module for #2
--- for MZ-700 on FPGA
+-- for MZ-700/MZ-80C on FPGA
 --
 -- Count only mode 0 and read out counter
 --
--- Nibbles Lab. 2005
+-- Nibbles Lab. 2005-2012
 --
 
 library IEEE;
@@ -20,15 +20,17 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --use UNISIM.VComponents.all;
 
 entity counter2 is
-    Port ( DI : in std_logic_vector(7 downto 0);
-           DO : out std_logic_vector(7 downto 0);
-           WRD : in std_logic;
-           WRM : in std_logic;
-           KCLK : in std_logic;
-		 RD : in std_logic;
-           CLK : in std_logic;
-           GATE : in std_logic;
-           POUT : out std_logic);
+	Port (
+		DI : in std_logic_vector(7 downto 0);
+		DO : out std_logic_vector(7 downto 0);
+		WRD : in std_logic;
+		WRM : in std_logic;
+		KCLK : in std_logic;
+		RD : in std_logic;
+		CLK : in std_logic;
+		GATE : in std_logic;
+		POUT : out std_logic
+	);
 end counter2;
 
 architecture Behavioral of counter2 is
@@ -52,6 +54,7 @@ signal CD : std_logic_vector(15 downto 0);
 signal DTEN : std_logic;
 signal CEN : std_logic;
 signal LEN : std_logic;
+signal LEN_S : std_logic;
 
 begin
 
@@ -132,19 +135,24 @@ begin
 	-- Count (mode 0)
 	--
 	process( CLK, WRM, WRD, DI(5 downto 4), RL, WUL ) begin
-		if( LEN='1' ) then
-			CREG<=INIV;
+		if LEN='1' then
+			LEN_S<='1';
 			PO<='0';
-		elsif( CLK'event and CLK='1' ) then
-			if( WRM='0' ) then
-				if( DI(5 downto 4)/="00" ) then
+		elsif CLK'event and CLK='0' then
+			if WRM='0' then
+				if DI(5 downto 4)/="00" then
 					PO<='0';
 				end if;
-			elsif( GATE='1' and CEN='1' ) then
-				if( CREG=1 ) then
+			elsif GATE='1' and CEN='1' then
+				if CREG=1 then
 					PO<='1';
 				end if;
-				CREG<=CREG-1;
+				if LEN_S='1' then
+					CREG<=INIV;
+					LEN_S<='0';
+				else
+					CREG<=CREG-1;
+				end if;
 			end if;
 		end if;
 	end process;

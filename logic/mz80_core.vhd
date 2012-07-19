@@ -400,7 +400,7 @@ begin
 		CK12M5 => CK12M5,			-- VGA Clock(12.5MHz)
 		CK8M => CK8M,				-- 15.6kHz Dot Clock(8MHz)
 		CK2M => CK2M,				-- CPU/CLOCK Clock(2MHz)
-		CK3125 => CK3125,			-- Music Base Clock(31.25kHz)
+		CK3125 => CK3125,			-- Time Base Clock(31.25kHz)
 		-- CPU Signals
 		A => A16(11 downto 0),	-- CPU Address Bus
 		CSD_x => CSD_x,			-- CPU Memory Request(VRAM)

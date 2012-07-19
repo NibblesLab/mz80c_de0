@@ -2,11 +2,11 @@
 -- counter1.vhd
 --
 -- Intel 8253 counter module for #1
--- for MZ-700 on FPGA
+-- for MZ-700/MZ-80C on FPGA
 --
 -- Count only mode 2
 --
--- Nibbles Lab. 2005
+-- Nibbles Lab. 2005-2012
 --
 
 library IEEE;
@@ -20,14 +20,16 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 --use UNISIM.VComponents.all;
 
 entity counter1 is
-    Port ( DI : in std_logic_vector(7 downto 0);
-           DO : out std_logic_vector(7 downto 0);
-           WRD : in std_logic;
-           WRM : in std_logic;
-           KCLK : in std_logic;
-           CLK : in std_logic;
-           GATE : in std_logic;
-           POUT : out std_logic);
+	Port (
+		DI : in std_logic_vector(7 downto 0);
+		DO : out std_logic_vector(7 downto 0);
+		WRD : in std_logic;
+		WRM : in std_logic;
+		KCLK : in std_logic;
+		CLK : in std_logic;
+		GATE : in std_logic;
+		POUT : out std_logic
+	);
 end counter1;
 
 architecture Behavioral of counter1 is
@@ -99,7 +101,7 @@ begin
 	-- Count (mode 2)
 	--
 	process( CLK ) begin
-		if( CLK'event and CLK='1' ) then
+		if( CLK'event and CLK='0' ) then
 			GT<=GATE;
 			if( WRM='0' ) then
 				PO<='1';
