@@ -121,10 +121,10 @@ signal CMTINT : std_logic;
 -- NiosII processor
 --
 signal PCLK : std_logic;
-signal NA : std_logic_vector(18 downto 0);
-signal NDI : std_logic_vector(15 downto 0);
-signal NDO : std_logic_vector(15 downto 0);
-signal NBEN : std_logic_vector(1 downto 0);
+signal NA : std_logic_vector(17 downto 0);
+signal NDI : std_logic_vector(31 downto 0);
+signal NDO : std_logic_vector(31 downto 0);
+signal NBEN : std_logic_vector(3 downto 0);
 signal NWE : std_logic;
 signal NWRQ : std_logic;
 signal NRAMCS : std_logic;
@@ -301,11 +301,11 @@ component mz80c_de0_sopc
 		signal WE_to_the_internal_sram8_0 : OUT STD_LOGIC;
 
 		-- the_internal_sram_0_avalon_int_sram_slave
-		signal ADDR_to_the_internal_sram_0 : OUT STD_LOGIC_VECTOR (18 DOWNTO 0);
+		signal ADDR_to_the_internal_sram_0 : OUT STD_LOGIC_VECTOR (17 DOWNTO 0);
 		signal CS_to_the_internal_sram_0 : OUT STD_LOGIC;
-		signal DATA_I_to_the_internal_sram_0 : OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
-		signal DATA_O_from_the_internal_sram_0 : IN STD_LOGIC_VECTOR (15 DOWNTO 0);
-		signal DEN_to_the_internal_sram_0 : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+		signal DATA_I_to_the_internal_sram_0 : OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
+		signal DATA_O_from_the_internal_sram_0 : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
+		signal DEN_to_the_internal_sram_0 : OUT STD_LOGIC_VECTOR (3 DOWNTO 0);
 		signal WE_to_the_internal_sram_0 : OUT STD_LOGIC;
 		signal WREQ_from_the_internal_sram_0 : IN STD_LOGIC;
 
@@ -352,11 +352,11 @@ component sdram
 		BEA			: in std_logic_vector(1 downto 0);		-- Byte Enable
 		-- RAM access(port-B:Avalon bus bridge)
 		AB				: in std_logic_vector(21 downto 0);		-- Address
-		DBI			: in std_logic_vector(15 downto 0);		-- Data Input(16bit)
-		DBO			: out std_logic_vector(15 downto 0);	-- Data Output(16bit)
+		DBI			: in std_logic_vector(31 downto 0);		-- Data Input(32bit)
+		DBO			: out std_logic_vector(31 downto 0);	-- Data Output(32bit)
 		CSB			: in std_logic;
 		WEB			: in std_logic;								-- Write Enable
-		BEB			: in std_logic_vector(1 downto 0);		-- Byte Enable
+		BEB			: in std_logic_vector(3 downto 0);		-- Byte Enable
 		WQB			: out std_logic;								-- CPU Wait
 		-- RAM access(port-C:Z80 bus peripheral)
 		AC				: in std_logic_vector(21 downto 0);
@@ -586,9 +586,9 @@ begin
 		WEA => ZMWR,
 		BEA => "10",							-- Byte Enable
 		-- RAM access(port-B:Avalon bus bridge)
-		AB => "010"&NA,						-- Address
-		DBI => NDO,								-- Data Input(16bit)
-		DBO => NDI,								-- Data Output(16bit)
+		AB => "010"&NA&'0',					-- Address
+		DBI => NDO,								-- Data Input(32bit)
+		DBO => NDI,								-- Data Output(32bit)
 		CSB => NRAMCS,
 		WEB => NWE,								-- Write Enable
 		BEB => NBEN,							-- Byte Enable

@@ -82,11 +82,16 @@
          type = "int";
       }
    }
-   element internal_sram8_0.avalon_int_sram_slave
+   element internal_sram_0.avalon_int_sram_slave
    {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
       datum baseAddress
       {
-         value = "65536";
+         value = "2097152";
          type = "long";
       }
    }
@@ -98,16 +103,11 @@
          type = "long";
       }
    }
-   element internal_sram_0.avalon_int_sram_slave
+   element internal_sram8_0.avalon_int_sram_slave
    {
-      datum _lockedAddress
-      {
-         value = "1";
-         type = "boolean";
-      }
       datum baseAddress
       {
-         value = "2097152";
+         value = "65536";
          type = "long";
       }
    }
@@ -233,19 +233,11 @@
          type = "int";
       }
    }
-   element Z80STAT.s1
+   element PAGE.s1
    {
       datum baseAddress
       {
-         value = "96";
-         type = "long";
-      }
-   }
-   element pio_0.s1
-   {
-      datum baseAddress
-      {
-         value = "176";
+         value = "112";
          type = "long";
       }
    }
@@ -262,19 +254,19 @@
          type = "long";
       }
    }
-   element KBEN.s1
+   element pio_1.s1
    {
       datum baseAddress
       {
-         value = "144";
+         value = "16";
          type = "long";
       }
    }
-   element SPI_CS.s1
+   element NUM.s1
    {
       datum baseAddress
       {
-         value = "0";
+         value = "224";
          type = "long";
       }
    }
@@ -286,22 +278,6 @@
          type = "long";
       }
    }
-   element pio_1.s1
-   {
-      datum baseAddress
-      {
-         value = "16";
-         type = "long";
-      }
-   }
-   element PAGE.s1
-   {
-      datum baseAddress
-      {
-         value = "112";
-         type = "long";
-      }
-   }
    element uart_0.s1
    {
       datum baseAddress
@@ -310,11 +286,19 @@
          type = "long";
       }
    }
-   element KBDATA.s1
+   element pio_0.s1
    {
       datum baseAddress
       {
-         value = "160";
+         value = "176";
+         type = "long";
+      }
+   }
+   element SPI_CS.s1
+   {
+      datum baseAddress
+      {
+         value = "0";
          type = "long";
       }
    }
@@ -326,11 +310,27 @@
          type = "long";
       }
    }
-   element NUM.s1
+   element KBEN.s1
    {
       datum baseAddress
       {
-         value = "224";
+         value = "144";
+         type = "long";
+      }
+   }
+   element Z80STAT.s1
+   {
+      datum baseAddress
+      {
+         value = "96";
+         type = "long";
+      }
+   }
+   element KBDATA.s1
+   {
+      datum baseAddress
+      {
+         value = "160";
          type = "long";
       }
    }
@@ -392,7 +392,7 @@
  <parameter name="projectName" value="mz80c_de0.qpf" />
  <parameter name="sopcBorderPoints" value="true" />
  <parameter name="systemHash" value="-34760736024" />
- <parameter name="timeStamp" value="1339938794296" />
+ <parameter name="timeStamp" value="1365233295516" />
  <module kind="clock_source" version="11.0" enabled="1" name="PCLK">
   <parameter name="clockFrequency" value="20000000" />
   <parameter name="clockFrequencyKnown" value="true" />

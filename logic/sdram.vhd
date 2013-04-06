@@ -27,11 +27,11 @@ entity sdram is
 		BEA			: in std_logic_vector(1 downto 0);		-- Byte Enable
 		-- RAM access(port-B:Avalon bus bridge)
 		AB				: in std_logic_vector(21 downto 0);		-- Address
-		DBI			: in std_logic_vector(15 downto 0);		-- Data Input(16bit)
-		DBO			: out std_logic_vector(15 downto 0);	-- Data Output(16bit)
+		DBI			: in std_logic_vector(31 downto 0);		-- Data Input(32bit)
+		DBO			: out std_logic_vector(31 downto 0);	-- Data Output(32bit)
 		CSB			: in std_logic;
 		WEB			: in std_logic;								-- Write Enable
-		BEB			: in std_logic_vector(1 downto 0);		-- Byte Enable
+		BEB			: in std_logic_vector(3 downto 0);		-- Byte Enable
 		WQB			: out std_logic;								-- CPU Wait
 		-- RAM access(port-C:Z80 bus peripheral)
 		AC				: in std_logic_vector(21 downto 0);
@@ -89,7 +89,7 @@ signal PC : std_logic;
 signal PD : std_logic;
 signal WB : std_logic;
 signal DAIR : std_logic_vector(15 downto 0);
-signal DBIR : std_logic_vector(15 downto 0);
+signal DBIR : std_logic_vector(31 downto 0);
 signal DCIR : std_logic_vector(15 downto 0);
 signal DDIR : std_logic_vector(15 downto 0);
 signal WAITB : std_logic;
@@ -98,6 +98,8 @@ signal RDEN : std_logic;
 signal WREN : std_logic;
 signal UBEN : std_logic;
 signal LBEN : std_logic;
+signal UBEN2 : std_logic;
+signal LBEN2 : std_logic;
 signal RWAIT : std_logic;
 signal MEMCLK : std_logic;
 signal SCLKi : std_logic;
@@ -118,38 +120,23 @@ constant IDLY6  : std_logic_vector(5 downto 0) := "001000";	-- Initial Delay 6
 constant IMODE  : std_logic_vector(5 downto 0) := "001001";	-- Mode Register Setting
 constant RACT   : std_logic_vector(5 downto 0) := "001010";	-- Read Activate
 constant RDLY1  : std_logic_vector(5 downto 0) := "001011";	-- Read Delay 1
-constant RDA    : std_logic_vector(5 downto 0) := "001100";	-- Read with Precharge
-constant RDLY2  : std_logic_vector(5 downto 0) := "001101";	-- Read Delay 2
-constant RDLY3  : std_logic_vector(5 downto 0) := "001110";	-- Read Delay 3
-constant RDLY4  : std_logic_vector(5 downto 0) := "001111";	-- Read Delay 4
-constant HALT   : std_logic_vector(5 downto 0) := "010000";	--	Waiting
-constant WACT   : std_logic_vector(5 downto 0) := "010001";	-- Write Activate
-constant WDLY1  : std_logic_vector(5 downto 0) := "010010";	-- Write Delay 1
-constant WRA    : std_logic_vector(5 downto 0) := "010011";	-- Write with Precharge
-constant WDLY2  : std_logic_vector(5 downto 0) := "010100";	-- Write Delay 2
-constant WDLY3  : std_logic_vector(5 downto 0) := "010101";	-- Write Delay 3
-constant FRFSH  : std_logic_vector(5 downto 0) := "010110";	-- Auto Refresh
-constant FDLY1  : std_logic_vector(5 downto 0) := "010111";	-- Refresh Delay 1
-constant FDLY2  : std_logic_vector(5 downto 0) := "011000";	-- Refresh Delay 2
-constant FDLY3  : std_logic_vector(5 downto 0) := "011001";	-- Refresh Delay 3
-constant FDLY4  : std_logic_vector(5 downto 0) := "011010";	-- Refresh Delay 4
-constant WRACT  : std_logic_vector(5 downto 0) := "011011";	-- Read Activate
-constant WRDLY1 : std_logic_vector(5 downto 0) := "011100";	-- Read Delay 1
-constant WRDA   : std_logic_vector(5 downto 0) := "011101";	-- Read with Precharge
-constant WRDLY2 : std_logic_vector(5 downto 0) := "011110";	-- Read Delay 2
-constant WRDLY3 : std_logic_vector(5 downto 0) := "011111";	-- Read Delay 3
-constant WRDLY4 : std_logic_vector(5 downto 0) := "100000";	-- Read Delay 4
-constant WRDLY5 : std_logic_vector(5 downto 0) := "100001";	-- Read Delay 5
-constant WRDLY6 : std_logic_vector(5 downto 0) := "100010";	-- Read Delay 6
-constant WRDLY7 : std_logic_vector(5 downto 0) := "100011";	-- Read Delay 7
-constant WWACT  : std_logic_vector(5 downto 0) := "100100";	-- Write Activate
-constant WWDLY1 : std_logic_vector(5 downto 0) := "100101";	-- Write Delay 1
-constant WWRA   : std_logic_vector(5 downto 0) := "100110";	-- Write with Precharge
-constant WWDLY2 : std_logic_vector(5 downto 0) := "100111";	-- Write Delay 2
-constant WWDLY3 : std_logic_vector(5 downto 0) := "101000";	-- Write Delay 3
-constant WWDLY4 : std_logic_vector(5 downto 0) := "101001";	-- Write Delay 4
-constant WWDLY5 : std_logic_vector(5 downto 0) := "101010";	-- Write Delay 5
-constant WWDLY6 : std_logic_vector(5 downto 0) := "101011";	-- Write Delay 6
+constant READ   : std_logic_vector(5 downto 0) := "001100";	-- Read
+constant READ2  : std_logic_vector(5 downto 0) := "001101";	-- Read 2nd word
+constant RDLY2  : std_logic_vector(5 downto 0) := "001110";	-- Read Delay 2
+constant RPRE   : std_logic_vector(5 downto 0) := "001111";	-- Precharge
+constant RDLY3  : std_logic_vector(5 downto 0) := "010000";	-- Read Delay 3
+constant HALT   : std_logic_vector(5 downto 0) := "010001";	--	Waiting
+constant WACT   : std_logic_vector(5 downto 0) := "010010";	-- Write Activate
+constant WDLY1  : std_logic_vector(5 downto 0) := "010011";	-- Write Delay 1
+constant WRIT   : std_logic_vector(5 downto 0) := "010100";	-- Write
+constant WRIT2  : std_logic_vector(5 downto 0) := "010101";	-- Write 2nd word
+constant WDLY2  : std_logic_vector(5 downto 0) := "010110";	-- Write Delay 2
+constant WPRE   : std_logic_vector(5 downto 0) := "010111";	-- Precharge
+constant FRFSH  : std_logic_vector(5 downto 0) := "011000";	-- Auto Refresh
+constant FDLY1  : std_logic_vector(5 downto 0) := "011001";	-- Refresh Delay 1
+constant FDLY2  : std_logic_vector(5 downto 0) := "011010";	-- Refresh Delay 2
+constant FDLY3  : std_logic_vector(5 downto 0) := "011011";	-- Refresh Delay 3
+constant FDLY4  : std_logic_vector(5 downto 0) := "011100";	-- Refresh Delay 4
 --
 -- Components
 --
@@ -205,40 +192,47 @@ begin
 			PB<='0';
 			PC<='0';
 			PD<='0';
-			WAITB<='0';
-			WAITD<='0';
+			WAITB<='1';
+			WAITD<='1';
 		elsif MEMCLK'event and MEMCLK='1' then
 			--
 			-- Sense CS
 			--
 			CSAii<=CSAii(2 downto 0)&CSA;
-			if CSAii="1000" then
+--			if CSAii="1000" then
+			if CSAii(1 downto 0)="10" then
 				CSAi<='1';
 				DAIR<=DAI;
 			end if;
 			CSBii<=CSBii(2 downto 0)&CSB;
-			if CSBii="1000" then
-				CSBi<='1';
-				DBIR<=DBI;
+			if CSBii="1110" then
 				WAITB<='0';
 			end if;
+--			if CSBii="1000" then
+			if CSBii(1 downto 0)="10" then
+				CSBi<='1';
+				DBIR<=DBI;
+			end if;
 			CSCii<=CSCii(2 downto 0)&CSC;
-			if CSCii="1000" then
+--			if CSCii="1000" then
+			if CSCii(1 downto 0)="10" then
 				CSCi<='1';
 				DCIR<=DCI;
 			end if;
 			CSDii<=CSDii(2 downto 0)&CSD;
-			if CSDii="1000" then
+			if CSDii="1110" then
+				WAITD<='0';
+			end if;
+--			if CSDii="1000" then
+			if CSDii(1 downto 0)="10" then
 				CSDi<='1';
 				DDIR<=DDI;
-				WAITD<='0';
 			end if;
 
 			--
 			-- Select Response Port
 			--
 			if CUR=HALT then
-				WAITB<='0';
 				if CSAi='1' and PB='0' and PC='0' and PD='0' then
 					PA<='1';
 					RDEN<=WEA;
@@ -255,6 +249,8 @@ begin
 					PB<='1';
 					RDEN<=WEB;
 					WREN<=not WEB;
+					UBEN2<=BEB(3);
+					LBEN2<=BEB(2);
 					UBEN<=BEB(1);
 					LBEN<=BEB(0);
 				elsif CSDi='1' and PA='0' and PB='0' and PC='0' then
@@ -275,67 +271,73 @@ begin
 			--
 			-- Deselect Port
 			--
-			if CUR=RDLY3 or CUR=WDLY2 or CUR=WRDLY3 or CUR=WWDLY2 then
-				PA<='0'; PC<='0';
-				RDEN<='0'; WREN<='0';
+			if CUR=RPRE or CUR=WDLY2 then
 				if PA='1' then
+					PA<='0';
+					RDEN<='0';
+					WREN<='0';
 					CSAi<='0';
 				end if;
-				if PB='1' then
-					CSBi<='0';
-					WAITB<='1';
-				end if;
 				if PC='1' then
+					PC<='0';
+					RDEN<='0';
+					WREN<='0';
 					CSCi<='0';
 				end if;
 				if PD='1' then
+					PD<='0';
+					RDEN<='0';
+					WREN<='0';
 					CSDi<='0';
 					WAITD<='1';
 				end if;
 			end if;
-			if CUR=WRDLY5 or CUR=WWDLY5 then
-				PB<='0'; PD<='0';
+			if CUR=RDLY3 or CUR=WPRE then
 				if PB='1' then
-					CSBii<="1111";
-				end if;
-				if PD='1' then
-					CSDii<="1111";
+					PB<='0';
+					RDEN<='0';
+					WREN<='0';
+					CSBi<='0';
+					WAITB<='1';
 				end if;
 			end if;
 
 			--
 			-- Data Output for Processor
 			--
-			if CUR=RDLY3 or CUR=WRDLY3 then		-- Ready for Data Output
+			if CUR=RPRE then		-- Ready for Data Output
 				if PA='1' then
 					DAO<=MDI;
 				elsif PB='1' then
-					DBO<=MDI;
+					DBO(15 downto 0)<=MDI;
 				elsif PC='1' then
 					DCO<=MDI;
---					DCO(31 downto 16)<=MDI;
 				elsif PD='1' then
 					DDO<=MDI;
 				end if;
 			end if;
---			if CUR=RDLY4 then
---				if PC='1' then
---					DCO(15 downto 0)<=MDI;
---				end if;
---			end if;
+			if CUR=RDLY3 then
+				if PB='1' then
+					DBO(31 downto 16)<=MDI;
+				end if;
+			end if;
 
 			--
 			-- Data Output for SDRAM
 			--
-			if CUR=WACT or CUR=WWACT then
+			if CUR=WACT then
 				if PA='1' then
 					MDO<=DAIR;
 				elsif PB='1' then
-					MDO<=DBIR;
+					MDO<=DBIR(15 downto 0);
 				elsif PC='1' then
 					MDO<=DCIR;
 				elsif PD='1' then
 					MDO<=DDIR;
+				end if;
+			elsif CUR=WRIT then
+				if PB='1' then
+					MDO<=DBIR(31 downto 16);
 				end if;
 			end if;
 		end if;
@@ -475,7 +477,7 @@ begin
 	--
 	-- Sequencer
 	--
-	process( CUR ) begin
+	process( CUR, CNT200, CNT3, REFCNT, RDEN, WREN, PA, PB, PC, PD ) begin
 		case CUR is
 			-- Initialize
 			when IWAIT =>	-- 200us Wait
@@ -511,34 +513,24 @@ begin
 			when RACT  =>	-- Read Activate
 				NXT<=RDLY1;
 			when RDLY1 =>	-- Read Delay 1
-				NXT<=RDA;
-			when RDA   =>	-- Read with Precharge
-				NXT<=RDLY2;
+				NXT<=READ;
+			when READ   =>	-- Read once or 1st word
+				if PB='1' then
+					NXT<=READ2;
+				else
+					NXT<=RDLY2;
+				end if;
+			when READ2  =>	-- Read 2nd word
+				NXT<=RPRE;
 			when RDLY2 =>	-- Read Delay 2
-				NXT<=RDLY3;
+				NXT<=RPRE;
+			when RPRE =>	-- Precharge
+				if PB='1' then
+					NXT<=RDLY3;
+				else
+					NXT<=HALT;
+				end if;
 			when RDLY3 =>	-- Read Delay 3
---				NXT<=RDLY4;
---			when RDLY4 =>	-- Read Delay 4
-				NXT<=HALT;
-
-			-- Read with wait
-			when WRACT  =>	-- Read Activate
-				NXT<=WRDLY1;
-			when WRDLY1 =>	-- Read Delay 1
-				NXT<=WRDA;
-			when WRDA   =>	-- Read with Precharge
-				NXT<=WRDLY2;
-			when WRDLY2 =>	-- Read Delay 2
-				NXT<=WRDLY3;
-			when WRDLY3 =>	-- Read Delay 3
-				NXT<=WRDLY4;
-			when WRDLY4 =>	-- Read Delay 4
-				NXT<=WRDLY5;
-			when WRDLY5 =>	-- Read Delay 5
-				NXT<=WRDLY6;
-			when WRDLY6 =>	-- Read Delay 6
-				NXT<=WRDLY7;
-			when WRDLY7 =>	-- Read Delay 7
 				NXT<=HALT;
 
 			-- Waiting
@@ -546,17 +538,9 @@ begin
 				if REFCNT>"11000000100" then	-- Over 1540 Counts
 					NXT<=FRFSH;
 				elsif RDEN='1' then
-					if PB='1' or PD='1' then
-						NXT<=WRACT;
-					else
-						NXT<=RACT;
-					end if;
+					NXT<=RACT;
 				elsif WREN='1' then
-					if PB='1' or PD='1' then
-						NXT<=WWACT;
-					else
-						NXT<=WACT;
-					end if;
+					NXT<=WACT;
 				else
 					NXT<=HALT;
 				end if;
@@ -565,30 +549,18 @@ begin
 			when WACT  =>	-- Write Activate
 				NXT<=WDLY1;
 			when WDLY1 =>	-- Write Delay 1
-				NXT<=WRA;
-			when WRA   =>	-- Write with Precharge
-				NXT<=WDLY2;
+				NXT<=WRIT;
+			when WRIT   =>	-- Write once or 1st word
+				if PB='1' then
+					NXT<=WRIT2;
+				else
+					NXT<=WDLY2;
+				end if;
+			when WRIT2  =>	-- Write 2nd word
+				NXT<=WPRE;
 			when WDLY2 =>	-- Write Delay 2
-				NXT<=WDLY3;
-			when WDLY3 =>	-- Write Delay 3
-				NXT<=HALT;
-
-			-- Write with wait
-			when WWACT  =>	-- Write Activate
-				NXT<=WWDLY1;
-			when WWDLY1 =>	-- Write Delay 1
-				NXT<=WWRA;
-			when WWRA   =>	-- Write with Precharge
-				NXT<=WWDLY2;
-			when WWDLY2 =>	-- Write Delay 2
-				NXT<=WWDLY3;
-			when WWDLY3 =>	-- Write Delay 3
-				NXT<=WWDLY4;
-			when WWDLY4 =>	-- Write Delay 4
-				NXT<=WWDLY5;
-			when WWDLY5 =>	-- Write Delay 5
-				NXT<=WWDLY6;
-			when WWDLY6 =>	-- Write Delay 6
+				NXT<=WPRE;
+			when WPRE =>	-- Precharge
 				NXT<=HALT;
 
 			-- Refresh
@@ -611,7 +583,7 @@ begin
 	--
 	-- Command operation
 	--
-	process( CUR ) begin
+	process( CUR, LBEN, UBEN, A, LBEN2, UBEN2 ) begin
 		case CUR is
 			when IMODE =>		-- Mode Register Setting
 				MCS<='0';
@@ -623,7 +595,7 @@ begin
 				MDOE<='0';
 				MLDQ<='1';
 				MUDQ<='1';
-			when RACT|WACT|WRACT|WWACT =>	-- Read/Write Activate
+			when RACT|WACT =>	-- Read/Write Activate
 				MCS<='0';
 				MRAS<='0';
 				MCAS<='1';
@@ -641,27 +613,49 @@ begin
 				MDOE<='0';
 				MLDQ<='1';
 				MUDQ<='1';
-			when RDA|WRDA =>			-- Read with Precharge
+			when READ =>			-- Read
 				MCS<='0';
 				MRAS<='1';
 				MCAS<='0';
 				MWE<='1';
-				MA(11 downto 8)<="0100";	-- auto precharge
-				--MA(11 downto 8)<="0000";	-- manual precharge
+				--MA(11 downto 8)<="0100";	-- auto precharge
+				MA(11 downto 8)<="0000";	-- manual precharge
 				MA(7 downto 0)<=A(7 downto 0);
 				MDOE<='0';
 				MLDQ<=LBEN;
 				MUDQ<=UBEN;
-			when WRA|WWRA =>			-- Write with Precharge
+			when READ2 =>			-- Read 2nd word
+				MCS<='0';
+				MRAS<='1';
+				MCAS<='0';
+				MWE<='1';
+				--MA(11 downto 8)<="0100";	-- auto precharge
+				MA(11 downto 8)<="0000";	-- manual precharge
+				MA(7 downto 0)<=A(7 downto 1)&'1';
+				MDOE<='0';
+				MLDQ<=LBEN2;
+				MUDQ<=UBEN2;
+			when WRIT =>			-- Write
 				MCS<='0';
 				MRAS<='1';
 				MCAS<='0';
 				MWE<='0';
-				MA(11 downto 8)<="0100";	-- auto precharge
-				--MA(11 downto 8)<="0000";	-- manual precharge
+				--MA(11 downto 8)<="0100";	-- auto precharge
+				MA(11 downto 8)<="0000";	-- manual precharge
 				MA(7 downto 0)<=A(7 downto 0);
 				MLDQ<=LBEN;
 				MUDQ<=UBEN;
+				MDOE<='1';
+			when WRIT2 =>			-- Write 2nd word
+				MCS<='0';
+				MRAS<='1';
+				MCAS<='0';
+				MWE<='0';
+				--MA(11 downto 8)<="0100";	-- auto precharge
+				MA(11 downto 8)<="0000";	-- manual precharge
+				MA(7 downto 0)<=A(7 downto 1)&'1';
+				MLDQ<=LBEN2;
+				MUDQ<=UBEN2;
 				MDOE<='1';
 			when IRFSH|FRFSH =>		-- auto refresh
 				MCS<='0';
@@ -669,6 +663,15 @@ begin
 				MCAS<='0';
 				MWE<='1';
 				MA<=(others=>'0');
+				MDOE<='0';
+				MLDQ<='1';
+				MUDQ<='1';
+			when RPRE|WPRE =>			-- Select Bank Precharge
+				MCS<='0';
+				MRAS<='0';
+				MCAS<='1';
+				MWE<='0';
+				MA<="000000000000";
 				MDOE<='0';
 				MLDQ<='1';
 				MUDQ<='1';
@@ -711,9 +714,6 @@ begin
 		 AB when PB='1' else
 		 AC when PC='1' else
 		 AD when PD='1' else (others=>'0');
---	MDO<=DAIR when PA='1' and CUR=WRA else
---		DBIR when PB='1' and CUR=WRA else
---		DCIR when PC='1' and CUR=WRA else (others=>'0');
 
 	--
 	-- I/O ports
