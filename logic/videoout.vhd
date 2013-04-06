@@ -22,8 +22,9 @@ entity videoout is
 		CK50M  : in std_logic;		-- Master Clock(50MHz)
 		CK12M5 : out std_logic;		-- VGA Clock(12.5MHz)
 		CK8M   : out std_logic;		-- 15.6kHz Dot Clock(8MHz)
-		CK2M   : out std_logic;		-- CPU/CLOCK Clock(2MHz)
+		CK4M   : out std_logic;		-- CPU/CLOCK Clock(4MHz)
 		CK3125 : out std_logic;		-- Music Base Clock(31.25kHz)
+		ZCLK   : in std_logic;		-- Z80 Clock
 		-- CPU Signals
 		A      : in std_logic_vector(11 downto 0);	-- CPU Address Bus
 		CSD_x  : in std_logic;								-- CPU Memory Request(VRAM)
@@ -60,7 +61,7 @@ architecture RTL of videoout is
 -- Clocks
 --
 signal CK8Mi   : std_logic;	-- 8MHz
-signal CK2Mi   : std_logic;	-- 2MHz
+--signal CK2Mi   : std_logic;	-- 2MHz
 --
 -- Registers
 --
@@ -239,7 +240,7 @@ begin
 		DI => DI,
 		CSE_x => CSE_x,
 		WR_x => WR_x,
-		MCLK => CK2Mi,
+		MCLK => ZCLK,
 		-- Settings
 		PCGSW => PCGSW,
 		MZMODE => MZMODE,
@@ -258,7 +259,7 @@ begin
 			inclk0	 => CK50M,
 			c0	 => CK12M5,
 			c1	 => CK8Mi,
-			c2	 => CK2Mi,
+			c2	 => CK4M,
 			c3	 => CK3125);
 
 	--
@@ -345,11 +346,11 @@ begin
 	--
 	-- Control Registers
 	--
-	process( RST, CK2Mi ) begin
+	process( RST, ZCLK ) begin
 		if RST='0' then
 			INV<='0';
 			OFST<=(others=>'0');
-		elsif CK2Mi'event and CK2Mi='0' then
+		elsif ZCLK'event and ZCLK='0' then
 			if CSINV_x='0' and RD_x='0' then
 				INV<=MA(0);
 			end if;
@@ -371,16 +372,16 @@ begin
 		end if;
 	end process;
 
-	process( MREQ_x, CK2Mi ) begin
+	process( MREQ_x, ZCLK ) begin
 		if MREQ_x='1' then
 			CPUENi<='0';
-		elsif CK2Mi'event and CK2Mi='0' then
+		elsif ZCLK'event and ZCLK='0' then
 			CPUENi<=not XBLNK;
 		end if;
 	end process;
 
-	process( CK2Mi ) begin
-		if CK2Mi'event and CK2Mi='1' then
+	process( ZCLK ) begin
+		if ZCLK'event and ZCLK='1' then
 			WAITii_x<=WAITi_x;
 		end if;
 	end process;
@@ -445,7 +446,6 @@ begin
 	-- Output
 	--
 	CK8M<=CK8Mi;
-	CK2M<=CK2Mi;
 	VBLANK<=VDISPEN;
 	HBLANK<=HBLANKi;
 	ROUT<=BR  when DMODE="11" or BACK='0' else

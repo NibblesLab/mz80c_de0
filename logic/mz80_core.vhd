@@ -87,9 +87,12 @@ signal BAK : std_logic;
 -- Clocks
 --
 signal CK2M : std_logic;
+signal CK4M : std_logic;
+signal ZCLKi : std_logic;
 signal CK8M : std_logic;
 signal CK12M5 : std_logic;
 signal CK3125 : std_logic;
+signal CKMODE : std_logic;
 signal SCLK : std_logic;
 signal HCLK : std_logic;
 signal CASCADE : std_logic;
@@ -246,8 +249,9 @@ component videoout is
 		CK50M  : in std_logic;		-- Master Clock(50MHz)
 		CK12M5 : out std_logic;		-- VGA Clock(12.5MHz)
 		CK8M   : out std_logic;		-- 15.6kHz Dot Clock(8MHz)
-		CK2M   : out std_logic;		-- CPU/CLOCK Clock(2MHz)
+		CK4M   : out std_logic;		-- CPU/CLOCK Clock(4MHz)
 		CK3125 : out std_logic;		-- Music Base Clock(31.25kHz)
+		ZCLK   : in std_logic;		-- Z80 Clock
 		-- CPU Signals
 		A      : in std_logic_vector(11 downto 0);	-- CPU Address Bus
 		CSD_x  : in std_logic;								-- CPU Memory Request(VRAM)
@@ -319,7 +323,7 @@ begin
 	)
 	port map (
 		RESET_n => RST_x,
-		CLK_n => CK2M,
+		CLK_n => ZCLKi,
 		WAIT_n => ZWAIT,
 		INT_n => INT,
 		NMI_n => '1',
@@ -339,7 +343,7 @@ begin
 
 	PPI0 : i8255 port map (
 		RST => RST_x,
-		CLK => CK2M,
+		CLK => ZCLKi,
 		A => A16(1 downto 0),
 		CS => CSE0_x,
 		WR => WR,
@@ -348,7 +352,8 @@ begin
 		-- Port A&B
 		KBEN => KBEN,								-- PS/2 Keyboard Data Valid
 		KBDT => KBDT,								-- PS/2 Keyboard Data
-		KCLK => CK2M,								-- Key controller base clock
+--		KCLK => CK2M,								-- Key controller base clock
+		KCLK => ZCLKi,								-- Key controller base clock
 		-- Port C
 		CLKIN => SCLK,								-- Cursor Blink signal
 --		FCLK => NTSCCLK,
@@ -372,7 +377,7 @@ begin
 
 	PIT0 : i8253 port map (
 		RST => RST_x,
-		CLK => CK2M,
+		CLK => ZCLKi,
 		A => A16(1 downto 0),
 		DI => DO,
 		DO => DOPIT,
@@ -399,8 +404,9 @@ begin
 		CK50M => CLOCK_50,		-- Master Clock(50MHz)
 		CK12M5 => CK12M5,			-- VGA Clock(12.5MHz)
 		CK8M => CK8M,				-- 15.6kHz Dot Clock(8MHz)
-		CK2M => CK2M,				-- CPU/CLOCK Clock(2MHz)
+		CK4M => CK4M,				-- CPU/CLOCK Clock(2MHz)
 		CK3125 => CK3125,			-- Time Base Clock(31.25kHz)
+		ZCLK => ZCLKi,				-- Z80 Clock
 		-- CPU Signals
 		A => A16(11 downto 0),	-- CPU Address Bus
 		CSD_x => CSD_x,			-- CPU Memory Request(VRAM)
@@ -497,13 +503,30 @@ begin
 	--
 	-- Ports
 	--
-	ZCLK<=CK2M;
 	A<=A16;
 	BACK<=BAK;
 	ZDO<=DO;
 	RAMCS_x<=CSRAM;
 	MWR_x<='1' when A16(15 downto 12)="0000" or A16(15 downto 12)="1111" or A16(15 downto 11)="11101" else MWR;
 	IWR_x<=IWR;
+
+	--
+	-- Clock
+	--
+	process( CK4M ) begin
+		if CK4M'event and CK4M='1' then
+			CK2M<=not CK2M;
+			if CK2M='1' then
+				if SW(1)='0' or SENSE='0' then
+					CKMODE<='0';
+				else
+					CKMODE<='1';
+				end if;
+			end if;
+		end if;
+	end process;
+	ZCLKi<=CK2M when CKMODE='0' else CK4M;
+	ZCLK<=ZCLKi;
 
 	--
 	-- Misc
