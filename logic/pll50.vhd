@@ -167,7 +167,7 @@ BEGIN
 		clk1_phase_shift => "0",
 		clk2_divide_by => 25,
 		clk2_duty_cycle => 50,
-		clk2_multiply_by => 1,
+		clk2_multiply_by => 2,
 		clk2_phase_shift => "0",
 		clk3_divide_by => 1600,
 		clk3_duty_cycle => 50,
@@ -261,7 +261,7 @@ END SYN;
 -- Retrieval info: PRIVATE: DUTY_CYCLE3 STRING "50.00000000"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "12.500000"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "8.000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "2.000000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE2 STRING "4.000000"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE3 STRING "0.031250"
 -- Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
 -- Retrieval info: PRIVATE: EXT_FEEDBACK_RADIO STRING "0"
@@ -298,7 +298,7 @@ END SYN;
 -- Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "12.50000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "8.00000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "2.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "4.00000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ3 STRING "0.03125000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "1"
@@ -369,7 +369,7 @@ END SYN;
 -- Retrieval info: CONSTANT: CLK1_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: CLK2_DIVIDE_BY NUMERIC "25"
 -- Retrieval info: CONSTANT: CLK2_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "1"
+-- Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "2"
 -- Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: CLK3_DIVIDE_BY NUMERIC "1600"
 -- Retrieval info: CONSTANT: CLK3_DUTY_CYCLE NUMERIC "50"
