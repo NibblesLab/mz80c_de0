@@ -63,6 +63,8 @@ How to reproduction project
 * Build project. Project->Build All
 * Program to DE0 board with mz80c\_de0\_soft.elf.
 * Put the files in CARD folder to SD/MMC card.
+    * ROM files(MONITOR, CG)
+    * Programs(BASIC, Games, etc.)
 * Set card to slot, SW5 is ON(upper), then push power-switch off-on.
 
 Special thanks to ...
