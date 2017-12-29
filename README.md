@@ -32,7 +32,7 @@ How to reproduction project
 * Push Ganerate button in SOPC Builder.
 * When generate successfully, exit SOPC Builder.
 * Start Compilation at Quartus II.
-* Program to DE0 board with mz80c.pof.
+* Change SW11 to PROG, and power on. Program to DE0 board with mz80c.pof with Programmer.
 * Start NiosII EDS. Tools->Nios II Software Build Tools for Eclipse
 * When does PC ask workspace, push OK as it is.
 * Create new application and BSP. File->New->Nios II Application and BSP from Template
@@ -61,10 +61,20 @@ How to reproduction project
 * Delete hello\_world.c.
 * At Project Explorer, expand mz80c\_de0\_soft, then right-click and select Refresh(F5).
 * Build project. Project->Build All
-* Program to DE0 board with mz80c\_de0\_soft.elf.
+* Push power-sw to off, change SW11 to RUN, then power on. Start Flash Programmer. Nios II->Flash Programmer
+* Create new project. File->New...
+* Check "Get flash programmer system details from SOPC Information File"(already selected).
+* Set parameters and push OK button.
+    * SOPC Information File name:->mz80c\_de0\_sopc.sopcinfo
+    * Master CPU name:->cpu\_0
+    * (Flash memory:->cfi\_flash\_0)
+* Check ready for Hardware connection(USB cable).
+* At "Files for flash conversion" section, push "Add..." button, select mz80c\_de0\_soft.elf.
+* Push Start, and push Exit when process is suceeded.
 * Put the files in CARD folder to SD/MMC card.
     * ROM files(MONITOR, CG)
     * Programs(BASIC, Games, etc.)
+    * SYSTEM.INI
 * Set card to slot, SW5 is ON(upper), then push power-switch off-on.
 
 Special thanks to ...
